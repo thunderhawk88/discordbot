@@ -144,10 +144,10 @@ async def embed(ctx):
 async def embed(ctx):
     cManga = getManga2()
     if cManga != None:
-        embed = discord.Embed(title = "**" + str(cManga['title']) + "**", url = str(cManga['link']), description = str(cManga['desc']), color = discord.Color.blue())
-        embed.set_image(url = str(cManga['image']))
-        embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['reads']), inline = False)
-        print('Picked manga: ' + str(cManga['title']))
+        embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
+        embed.set_image(url = str(cManga['Image']))
+        embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
+        print('Picked manga: ' + str(cManga['Title']))
         await ctx.respond(embed=embed)
     else:
         await ctx.respond("Error retrieving a manga title.")
@@ -158,11 +158,12 @@ async def embed(ctx):
     message_channel = bot.get_channel(chan_craxmanga)
     cManga = getManga()
     if cManga != None:
-        embed = discord.Embed(title = "**" + str(cManga['title']) + "**", url = str(cManga['link']), description = str(cManga['desc']), color = discord.Color.blue())
-        embed.set_image(url = str(cManga['image']))
-        embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['reads']), inline = False)
-        print("Posted new manga recommendation: " + str(cManga['title']))
+        embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
+        embed.set_image(url = str(cManga['Image']))
+        embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
+        print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
+        await ctx.respond("Successfully added a manga recommendation to" + str(message_channel) + " channel.")
     else:
         await ctx.respond("Error retrieving a manga title.")
 
@@ -311,10 +312,10 @@ async def called_every_hour():
         message_channel = bot.get_channel(chan_craxmanga)
         cManga = getManga()
         if cManga != None:
-            embed = discord.Embed(title = "**" + str(cManga['title']) + "**", url = str(cManga['link']), description = str(cManga['desc']), color = discord.Color.blue())
-            embed.set_image(url = str(cManga['image']))
-            embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['reads']), inline = False)
-            print("Posted new manga recommendation: " + str(cManga['title']))
+            embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
+            embed.set_image(url = str(cManga['Image']))
+            embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
+            print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
     elif current_time.day == 24 and current_time.month == 11 and current_time.hour == 6: #ThanksGiving
         message_channel = bot.get_channel(chan_announ)
@@ -350,4 +351,4 @@ async def before():
 called_every_hour.start()
 #end
 
-bot.run('<DISCORDBOTTOKEN>')
+bot.run('MTA0MTM2Nzg0NDQ0NjgxNDI0MA.GTc3_Z.aND0qSWCafrn0tS-tfT2exRq6RklcQtI9YcqNs')

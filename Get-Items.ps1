@@ -1,10 +1,10 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true,Position=0,HelpMessage="Normal: Logs any errors during runtime. Otherwuse, None")]
+    [Parameter(Mandatory=$false,Position=0,HelpMessage="Normal: Logs any errors during runtime. Otherwuse, None")]
     [ValidateSet('None', 'Normal')]
 	[string]$LogLevel = 'Normal',
     [Parameter(Mandatory=$false,Position=1,HelpMessage="Text file listing Manga titles")]
-    [string]$CacheSource,
+    [string]$CacheSource = '.\temps\.mangaList',
     [Parameter(Mandatory=$false,Position=2,HelpMessage="Debug mode")]
     [Switch]$DebugMode
 )
@@ -68,7 +68,7 @@ Function Get-ItemDetails {
             Title = ($item.innerText -split '\n')[0].Trim()
             Description = ($item.innerText -split '\n')[6].Trim() -Replace " More.","..."
             Image = ([regex]::Matches($item.innerHTML,$ImagePattern)).Value
-            Reads = ([regex]::Matches($item.innerHTML,$ReadsPattern)).Value
+            Reads = [int]([regex]::Matches($item.innerHTML,$ReadsPattern)).Value
             Link  = $(
                         $Temp = ([regex]::Matches($item.innerHTML,$LinkPattern1)).Value
                         if (-not($Temp)) {$Temp = ([regex]::Matches($item.innerHTML,$LinkPattern2)).Value}
