@@ -75,31 +75,12 @@ def getManga2():
     else:
         return None
 
-# delete oldStats.txt
-# os.remove(f'{path_}/oldstats.txt')
-
-# bot = discord.Bot(intents=discord.Intents.all())
 bot = discord.Bot(intents=discord.Intents.all())
 
 bot_games = ['Palworld','Starfield','Apex Legends','Grounded','Valheim','DCS World','Plate Up','Terraria','Phasmophobia','Green Hell','Dead by Daylight','Icarus','Sons of the Forest','Outlast Trials','Diablo 4','Remnant II','Jagged Alliance 3']
 @bot.event
 async def on_ready():
-    # Setting `Playing ` status
     await bot.change_presence(activity=discord.Game(name=random.choice(bot_games)))
-    # # Setting `Streaming ` status
-    # await bot.change_presence(activity=discord.Streaming(name="My Stream", url=my_twitch_url))
-    # # Setting `Listening ` status
-    # await bot.change_presence(activity=discord. Activity(type=discord.ActivityType.listening, name='Mariah Carey - All I Want For Christmas Is You'))
-    # # Setting `Watching ` status
-    # await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="a movie"))
-    # Clear CraxStats Channel
-    # print(f'Current path_: {path_}')
-    # crax_stats = bot.get_channel(chan_craxstats)
-    # await crax_stats.purge(limit=100)
-    # Delete Saved message ID file; for craxStats Channel
-    # oldStats_path = f"{path_}\\temps\\.oldstats"
-    # print(oldStats_path)
-    # os.remove(oldStats_path)
 
 @bot.slash_command(name='crax', description="Just for testing slash command.", guild_ids=[845072861915512897])
 async def crax(ctx):
@@ -107,7 +88,6 @@ async def crax(ctx):
 
 @bot.slash_command(name='changebotgame', description="Changes what game Craxbot is playing.", guild_ids=[845072861915512897])
 async def botgame(ctx, game: str):
-    # game = random.choice(bot_games)
     await bot.change_presence(activity=discord.Game(name=game))
     await ctx.respond(f'Bot game changed to {game}.')
 
@@ -117,7 +97,6 @@ async def embed(ctx):
     cservers = getServers()
     if cservers != None and cservers != 404:
         embedList = []
-        # embed = discord.Embed(title = "**List of Servers**", description = "Here are the list of servers managed by Crax.", color = discord.Color.green())
         for game in cservers:
             for server in cservers[game]:
                 if (type(cservers[game][server]) == dict):
@@ -131,7 +110,6 @@ async def embed(ctx):
                         embed.add_field(name = "**Notes:** ", value = str(cservers[game][server]['note']), inline = False)
                     embedList.append(embed)
         print(embedList)
-        # await ctx.respond(embed=embedList)
         await channeltosend.send(embeds=embedList)
         await ctx.respond("Crax servers")
         embedList = []
@@ -163,7 +141,7 @@ async def embed(ctx):
         embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
         print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
-        await ctx.respond("Successfully added a manga recommendation to" + str(message_channel) + " channel.")
+        await ctx.respond("Successfully added a manga recommendation to " + str(message_channel) + " channel.")
     else:
         await ctx.respond("Error retrieving a manga title.")
 
@@ -203,29 +181,11 @@ htg_url =  ['https://media4.giphy.com/media/iq6sLARdMgGgDJ1ZYa/giphy.gif?cid=ecf
             'https://media2.giphy.com/media/W0VvyXqyGjlWJFZqLG/giphy.gif?cid=ecf05e47x329gkdslk1obw3db37ektlgxus3ay1h0yxd7euh&rid=giphy.gif&ct=g',
             'https://media1.giphy.com/media/YRoJR1ycDEkZd5VErv/giphy.gif?cid=ecf05e47x329gkdslk1obw3db37ektlgxus3ay1h0yxd7euh&rid=giphy.gif&ct=g']
 
-# oldStats = ''
 @bot.event
 async def on_message(message, guild_ids=[845072861915512897]):
-    # if (message.channel.id == chan_craxstats and message.content != 'clearstats'):
-    #     purgeChannel=bot.get_channel(chan_craxstats)
-    #     # await purgeChannel.purge(limit=1,oldest_first=1)
-    #     if Path(f'{path_}/temps/.oldstats').is_file():
-    #         with open(f'{path_}\\temps\\.oldstats','r') as f:
-    #             oldStats=f.readline()
-    #             print(f'[DEBUG] Previous Message ID: {oldStats}')
-    #             oldStats = await purgeChannel.fetch_message(oldStats)
-    #             if (oldStats):
-    #                 await oldStats.delete()
-    #                 print(f'[DEBUG] Old saved Message ID DELETED!')
-    #     f = open(f'{path_}/temps/.oldstats','w')
-    #     f.write(f'{message.id}')
-    #     print(f'[DEBUG] Current Message ID: {message.id}\n')
-    #     f.close()
-    
     if (message.channel.id == chan_craxstats and message.content == 'clearstats'):
         crax_chan = bot.get_channel(chan_craxstats)
         _thisMessage = await crax_chan.fetch_message(message.id)
-        # print(f'[DEBUG] Message ID: {_thisMessage}\n')
         await _thisMessage.delete()
         await crax_chan.purge(limit=500)
 
@@ -241,53 +201,20 @@ async def on_message(message, guild_ids=[845072861915512897]):
         return
     else:
         for word in reacts_:
-            # if word.casefold() in message.content.casefold():
             if message.content.casefold() == word.casefold():
                 channeltosend = bot.get_channel(message.channel.id)
                 embed = discord.Embed(title='', description='')
                 color = 0x9b59b6
                 if word.casefold() == reacts_[1] or word.casefold() == reacts_[2]: #noice react
-                    #embed.add_field(name="**Add something**", value="Or delete this.", inline=False) 
                     embed.set_image(url='https://media0.giphy.com/media/yJFeycRK2DB4c/giphy.gif?cid=ecf05e47tgg97mt1gz6laeirur2kk5z8qb3pcd7urcgbnq1r&rid=giphy.gif&ct=g')
-                    #embed.set_footer(text="add if u want something on the botton")
                     await message.delete()
                     await channeltosend.send(f'From {message.author.mention}\n', embed=embed)
                     break
                 elif word.casefold() == reacts_[3]: #anya react
-                    #embed.add_field(name="**Add something**", value="Or delete this.", inline=False) 
                     embed.set_image(url=random.choice(anya_url))
-                    #embed.set_footer(text="add if u want something on the botton")
                     await message.delete()
                     await channeltosend.send(f'From {message.author.mention}\n', embed=embed)
-                    break
-                # elif word.casefold() == reacts_[6]: #new_year_test
-                #     message_channel = bot.get_channel(chan_tests)
-                #     embed = discord.Embed(title='', description='')
-                #     embed.set_image(url='https://media1.giphy.com/media/RpHHzWCTyxArcRdOS0/giphy.gif?cid=ecf05e47ecu1a72ijbap4srujf11cywbqnwj0oribp7r6vdt&rid=giphy.gif&ct=g')
-                #     await message_channel.send(f'@everyone\n\nOn this New Year, I wish that you have\na superb January,\na dazzling February,\na Peaceful March,\nan anxiety-free April,\na sensational May,\nand joy that keeps going from June to November,\nand then round off with an upbeat December.\n\n...', embed=embed)
-                #     break
-                # elif word.casefold() == reacts_[4] or word.casefold() == reacts_[5]: #thanks giving react
-                #     if Path(f'{path_}/temp_time.txt').is_file():
-                #         f = open(f'{path_}/temp_time.txt','r', encoding="utf-8")
-                #         temp_time = f.readline()
-                #         temp_time = temp_time.strip()
-                #         temp_time = int(temp_time)
-                #         f.close()
-                #     else:
-                #         temp_time = 0
-                #     _time = int(round(time.time()))
-                #     diff_time = _time - temp_time
-                #     if diff_time >= 60:
-                #         #embed.add_field(name="**Add something**", value="Or delete this.", inline=False) 
-                #         embed.set_image(url=random.choice(htg_url))
-                #         #embed.set_footer(text="add if u want something on the botton")
-                #         await channeltosend.send(f'Happy thanks giving {message.author.mention}!\n', embed=embed)
-                #         temp_time = _time
-                #         f = open(f'{path_}/temp_time.txt','w')
-                #         f.write(f'{temp_time}')
-                #         f.close()
-                #         break
-                #     break  
+                    break 
 ### END REACTIONS
 
 #Holiday greetings
@@ -295,13 +222,6 @@ async def on_message(message, guild_ids=[845072861915512897]):
 async def called_every_hour():
     current_time = datetime.datetime.now()
     current_day = datetime.datetime.today()
-    #print(f"Got channel {message_channel}")
-    #print("Month : ", current_time.month)
-    #print("Day : ", current_time.day)
-    #print("Hour : ", current_time.hour)
-    #print("Minute : ", current_time.minute)
-    #print("Second :", current_time.second)
-    #print("Microsecond :", current_time.microsecond)
     if ((current_time.day % 7) == 0 and current_time.hour == 4): # attemp to clear channels; current_time.hour to 4 since servers are set to restart at 5
         crax_serv = bot.get_channel(chan_craxservers)
         crax_evnt = bot.get_channel(chan_craxevents)
@@ -346,7 +266,6 @@ async def called_every_hour():
 @called_every_hour.before_loop
 async def before():
     await bot.wait_until_ready()
-    # print("Finished waiting")
 
 called_every_hour.start()
 #end
