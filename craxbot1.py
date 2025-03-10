@@ -1,4 +1,4 @@
-import discord,pathlib,random,datetime,json,os,subprocess
+import discord,pathlib,random,datetime,json,os,subprocess,calendar
 from discord.ext import commands, tasks
 
 path_ = pathlib.Path(__file__).parent.absolute() # path to discord bot script
@@ -73,25 +73,59 @@ def getHolidays():
     if (_holidays != None):
         return _holidays
     else:
-        return None 
+        return None
+
+def find_nth_weekday(year, month, weekday, nth):
+    """Find the nth occurrence of a specific weekday within a given month."""
+    month_calendar = calendar.monthcalendar(year, month)
+    weekday_count = 0
+    for week in month_calendar:
+        if week[weekday] != 0: # weekday indexing starts from 0 (Monday)
+            weekday_count += 1
+            if weekday_count == nth:
+                return {"Year": year, "Month": month, "Day": week[weekday]}
+    return None
 
 # bot = discord.Bot(intents=discord.Intents.all())
 bot = discord.Bot(intents=discord.Intents.all())
 
 # load json file with Holiday details
-holidays = getHolidays()
-if (holidays != None):
-    try:
-        print()
-        print(f'Holiday: ' + str(holidays['thanksgiving']['Holiday']))
-        print(f'Hour: ' + str(holidays['thanksgiving']['Hour']))
-        print(f'Day: ' + str(holidays['thanksgiving']['Day']))
-        print(f'Month: ' + str(holidays['thanksgiving']['Month']))
-        print(f'Image: ' + str(holidays['thanksgiving']['Image']))
-        print(f'Msg: \n' + str(holidays['thanksgiving']['Message']))
-        print('===========================================')
-    except Exception as e:
-        print(e)
+try:
+    # import holidays from a file
+    holidays = getHolidays()
+
+    # formulate holidays
+    thanksgiving = find_nth_weekday(datetime.datetime.now().year, 11, 3, 4) # November, thursday, 4th week
+    mothersday = find_nth_weekday(datetime.datetime.now().year, 5, 6, 2) # 2nd sunday of may
+    fathersday = find_nth_weekday(datetime.datetime.now().year, 6, 6, 3) # 3rd sunday of june
+
+    # update days on holidays var
+    holidays['thanksgiving']['Day'] = thanksgiving['Day']
+    holidays['mothersday']['Day'] = mothersday['Day']
+    holidays['fathersday']['Day'] = fathersday['Day']
+    print('\nUpdated the days of thanks giving, mothers day, and fathers day holidays.')
+except Exception as e:
+    print(e)
+
+if (holidays['test']['Enable'] == 'True'):
+    print()
+    print(f'Holiday: '  + str(holidays['thanksgiving']['Holiday']))
+    print(f'Hour: '     + str(holidays['thanksgiving']['Hour']))
+    print(f'Day: '      + str(holidays['thanksgiving']['Day']))
+    print(f'Month: '    + str(holidays['thanksgiving']['Month']))
+    # print(f'Image: '    + str(holidays['thanksgiving']['Image']))
+    # print(f'Msg: \n'    + str(holidays['thanksgiving']['Message']))
+    print('===========================================')
+    print(f'Holiday: '  + str(holidays['mothersday']['Holiday']))
+    print(f'Hour: '     + str(holidays['mothersday']['Hour']))
+    print(f'Day: '      + str(holidays['mothersday']['Day']))
+    print(f'Month: '    + str(holidays['mothersday']['Month']))
+    print('===========================================')
+    print(f'Holiday: '  + str(holidays['fathersday']['Holiday']))
+    print(f'Hour: '     + str(holidays['fathersday']['Hour']))
+    print(f'Day: '      + str(holidays['fathersday']['Day']))
+    print(f'Month: '    + str(holidays['fathersday']['Month']))
+    print('===========================================')
 
 bot_games = ['Apex Legends','Terraria','Kingdom Come Deliverance 2','Monster Hunter Wild','Lost Ark','Civilization 7','Helldivers 2','NBA 2K25']
 @bot.event
