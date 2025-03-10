@@ -74,29 +74,6 @@ def getHolidays():
         return _holidays
     else:
         return None 
-    
-# def getManga2():
-#     _manga = None
-
-#     try:
-#         with open(mangaRecommended2, "r", encoding = "utf-8-sig") as sfile:
-#             _manga = json.load(sfile)
-#         print("Loaded successfully: " + str(mangaRecommended2))
-#     except Exception as e:
-#         _manga = None
-#         if hasattr(e, 'message'):
-#             print(e.message)
-#         else:
-#             print(e)
-
-#     if (_manga != None):
-#         _rand = random.randint(1, len(_manga))
-#         return _manga[str(_rand)]
-#     else:
-#         return None
-
-# delete oldStats.txt
-# os.remove(f'{path_}/oldstats.txt')
 
 # bot = discord.Bot(intents=discord.Intents.all())
 bot = discord.Bot(intents=discord.Intents.all())
@@ -116,7 +93,7 @@ if (holidays != None):
     except Exception as e:
         print(e)
 
-bot_games = ['Palworld','Starfield','Apex Legends','Grounded','Valheim','DCS World','Plate Up','Terraria','Phasmophobia','Green Hell','Dead by Daylight','Icarus','Sons of the Forest','Outlast Trials','Diablo 4','Remnant II','Jagged Alliance 3']
+bot_games = ['Apex Legends','Terraria','Kingdom Come Deliverance 2','Monster Hunter Wild','Lost Ark','Civilization 7','Helldivers 2','NBA 2K25']
 @bot.event
 async def on_ready():
     # Setting `Playing ` status
