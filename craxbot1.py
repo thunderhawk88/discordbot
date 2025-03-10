@@ -4,7 +4,7 @@ from discord.ext import commands, tasks
 path_ = pathlib.Path(__file__).parent.absolute() # path to discord bot script
 temppath = os.path.join(path_,"temps")
 serverList = os.path.join(temppath, "servers.json")
-getMangaScript = os.path.join(path_,"getpage.ps1")
+getMangaScript = os.path.join(path_,"Get-Manga.ps1")
 mangaRecommended = os.path.join(temppath,"manga.json")
 mangaRecommended2 = os.path.join(temppath,"manga2.json")
 
@@ -160,7 +160,8 @@ async def embed(ctx):
     if cManga != None:
         embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
         embed.set_image(url = str(cManga['Image']))
-        embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
+        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(cManga['Rating']), inline = False)
+        embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
         print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
         # await ctx.respond("Successfully added a manga recommendation to " + str(message_channel) + " channel.")
@@ -263,7 +264,9 @@ async def called_every_hour():
         if cManga != None:
             embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
             embed.set_image(url = str(cManga['Image']))
-            embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
+            # embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
+            embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(cManga['Rating']), inline = False)
+            embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
     elif current_time.day == 27 and current_time.month == 11 and current_time.hour == 6: #ThanksGiving
