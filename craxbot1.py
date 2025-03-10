@@ -7,6 +7,7 @@ serverList = os.path.join(temppath, "servers.json")
 getMangaScript = os.path.join(path_,"Get-Manga.ps1")
 mangaRecommended = os.path.join(temppath,"manga.json")
 mangaRecommended2 = os.path.join(temppath,"manga2.json")
+holidaysFile = os.path.join(temppath,"holidays.json")
 
 #OnCrax Channel IDs
 chan_announ = 1040696808797650974 #announcements channel
@@ -26,9 +27,10 @@ def getServers():
             with open(serverList, "r") as sfile:
                 _craxservers = json.load(sfile)
             print("Loaded successfully: " + str(serverList))
-        except:
+        except Exception as e:
             _craxservers = None
             print("Error loading server json file.")
+            print(e)
 
         if (_craxservers != None):
             return _craxservers
@@ -46,40 +48,73 @@ def getManga():
         with open(mangaRecommended, "r", encoding = "utf-8-sig") as sfile:
             _manga = json.load(sfile)
         print("Loaded successfully: " + str(mangaRecommended))
-    except:
+    except Exception as e:
         _manga != None
         print("Error loading manga json file.")
+        print(e)
 
     if (_manga != None):
         return _manga
     else:
         return None
     
-def getManga2():
-    _manga = None
+def getHolidays():
+    _holidays = None
 
     try:
-        with open(mangaRecommended2, "r", encoding = "utf-8-sig") as sfile:
-            _manga = json.load(sfile)
-        print("Loaded successfully: " + str(mangaRecommended2))
+        with open(holidaysFile, "r", encoding = "utf-8-sig") as sfile:
+            _holidays = json.load(sfile)
+        print("Loaded successfully: " + str(holidaysFile))
     except Exception as e:
-        _manga = None
-        if hasattr(e, 'message'):
-            print(e.message)
-        else:
-            print(e)
+        _holidays != None
+        print("Error loading manga json file.")
+        print(e)
 
-    if (_manga != None):
-        _rand = random.randint(1, len(_manga))
-        return _manga[str(_rand)]
+    if (_holidays != None):
+        return _holidays
     else:
-        return None
+        return None 
+    
+# def getManga2():
+#     _manga = None
+
+#     try:
+#         with open(mangaRecommended2, "r", encoding = "utf-8-sig") as sfile:
+#             _manga = json.load(sfile)
+#         print("Loaded successfully: " + str(mangaRecommended2))
+#     except Exception as e:
+#         _manga = None
+#         if hasattr(e, 'message'):
+#             print(e.message)
+#         else:
+#             print(e)
+
+#     if (_manga != None):
+#         _rand = random.randint(1, len(_manga))
+#         return _manga[str(_rand)]
+#     else:
+#         return None
 
 # delete oldStats.txt
 # os.remove(f'{path_}/oldstats.txt')
 
 # bot = discord.Bot(intents=discord.Intents.all())
 bot = discord.Bot(intents=discord.Intents.all())
+
+# load json file with Holiday details
+holidays = getHolidays()
+if (holidays != None):
+    try:
+        print()
+        print(f'Holiday: ' + str(holidays['thanksgiving']['Holiday']))
+        print(f'Hour: ' + str(holidays['thanksgiving']['Hour']))
+        print(f'Day: ' + str(holidays['thanksgiving']['Day']))
+        print(f'Month: ' + str(holidays['thanksgiving']['Month']))
+        print(f'Image: ' + str(holidays['thanksgiving']['Image']))
+        print(f'Msg: \n' + str(holidays['thanksgiving']['Message']))
+        print('===========================================')
+    except Exception as e:
+        print(e)
 
 bot_games = ['Palworld','Starfield','Apex Legends','Grounded','Valheim','DCS World','Plate Up','Terraria','Phasmophobia','Green Hell','Dead by Daylight','Icarus','Sons of the Forest','Outlast Trials','Diablo 4','Remnant II','Jagged Alliance 3']
 @bot.event
@@ -140,17 +175,17 @@ async def embed(ctx):
     else:
         await ctx.respond("Error!")
 
-@bot.slash_command(name='manga', description="Retrieve one 'HOT' manga at Mangakakalot.")
-async def embed(ctx):
-    cManga = getManga2()
-    if cManga != None:
-        embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
-        embed.set_image(url = str(cManga['Image']))
-        embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
-        print('Picked manga: ' + str(cManga['Title']))
-        await ctx.respond(embed=embed)
-    else:
-        await ctx.respond("Error retrieving a manga title.")
+# @bot.slash_command(name='manga', description="Retrieve one 'HOT' manga at Mangakakalot.")
+# async def embed(ctx):
+#     cManga = getManga2()
+#     if cManga != None:
+#         embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
+#         embed.set_image(url = str(cManga['Image']))
+#         embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
+#         print('Picked manga: ' + str(cManga['Title']))
+#         await ctx.respond(embed=embed)
+#     else:
+#         await ctx.respond("Error retrieving a manga title.")
 
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
 async def embed(ctx):
@@ -272,31 +307,36 @@ async def called_every_hour():
             embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
-    elif current_time.day == 27 and current_time.month == 11 and current_time.hour == 6: #ThanksGiving
+    elif current_time.day == holidays['thanksgiving']['Day'] and current_time.month == holidays['thanksgiving']['Month'] and current_time.hour == holidays['thanksgiving']['Hour']: #ThanksGiving
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url='https://res.cloudinary.com/display97/image/upload/q_auto,fl_lossy,f_auto/v1362515922/-158162.jpg')
-        await message_channel.send(f'@everyone\n\nWishing you a Thanksgiving full of **love** and **happiness**.\n\nI hope all the good things happen in your life.\n\n...', embed=embed)
-    elif current_time.day == 25 and current_time.month == 12 and current_time.hour == 00: #Christmas
+        embed.set_image(url=holidays['thanksgiving']['Image'])
+        await message_channel.send(holidays['thanksgiving']['Message'], embed=embed)
+    elif current_time.day == holidays['christmas']['Day'] and current_time.month == holidays['christmas']['Month'] and current_time.hour == holidays['christmas']['Hour']: #Christmas
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url='https://media3.giphy.com/media/ABPYR9xUWHPsBH9A6y/giphy.gif?cid=ecf05e47ro4htl9036r9qvz775nwnmf1x8bqkqaj2c6i2rp5&ep=v1_gifs_search&rid=giphy.gif&ct=g')
-        await message_channel.send(f'@everyone\n\nDear Santa,\n\nThis year please give me a big fat bank account and a slim body.\nYou mixed those two up last year.\n\n...', embed=embed)
-    elif current_time.day == 1 and current_time.month == 1 and current_time.hour == 00: #NewYear
+        embed.set_image(url=holidays['christmas']['Image'])
+        await message_channel.send(holidays['christmas']['Message'], embed=embed)
+    elif current_time.day == holidays['newyear']['Day'] and current_time.month == holidays['newyear']['Month'] and current_time.hour == holidays['newyear']['Hour']: #NewYear
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url='https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnZpNTUzcDFlNGw0cmM0cTFlOWdiZTVlMzVmc25qNzdhNmhjY3NpdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MnIcBxlyyZ9BeCmTnD/giphy.gif')
-        await message_channel.send(f'@everyone\n\nMay all your troubles last as long\nas your New Year\'s resolutions.\n\n...', embed=embed)
-    elif current_time.day == 11 and current_time.month == 5 and current_time.hour == 00: #MothersDay
+        embed.set_image(url=holidays['newyear']['Image'])
+        await message_channel.send(holidays['newyear']['Message'], embed=embed)
+    elif current_time.day == holidays['mothersday']['Day'] and current_time.month == holidays['mothersday']['Month'] and current_time.hour == holidays['mothersday']['Hour']: #MothersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url='https://media.giphy.com/media/l0Iy6CDDwhhx8ogGQ/giphy.gif')
-        await message_channel.send(f'@everyone\n\nHappy Mothers Day!\n\n...', embed=embed)
-    elif current_time.day == 15 and current_time.month == 6 and current_time.hour == 00: #FathersDay
+        embed.set_image(url=holidays['mothersday']['Image'])
+        await message_channel.send(holidays['mothersday']['Message'], embed=embed)
+    elif current_time.day == holidays['fathersday']['Day'] and current_time.month == holidays['fathersday']['Month'] and current_time.hour == holidays['fathersday']['Hour']: #FathersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url='https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGRmMjIzMzNjNmRkMjNmMTBiZjY1ZTBiMWVlMmFhZmMzNjAzNzAyOSZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/fSkOEaXP639Xr5mI8E/giphy.gif')
-        await message_channel.send(f'@everyone\n\nHappy Fathers Day!\n\n...', embed=embed)
+        embed.set_image(url=holidays['fathersday']['Image'])
+        await message_channel.send(holidays['fathersday']['Message'], embed=embed)
+    elif current_time.hour == holidays['test']['Hour'] and holidays['test']['Enable'] == 'True': #FathersDay
+        message_channel = bot.get_channel(chan_tests)
+        embed = discord.Embed(title='', description='')
+        embed.set_image(url=holidays['fathersday']['Image'])
+        await message_channel.send(holidays['fathersday']['Message'], embed=embed)
 
 @called_every_hour.before_loop
 async def before():
