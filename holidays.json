@@ -1,0 +1,51 @@
+﻿{
+	"test": {
+		"Holiday":  "Test Holiday",
+		"Enable": "False",
+		"Hour":  0,
+		"Day":  27,
+		"Month":  11,
+		"Image":  "https://res.cloudinary.com/display97/image/upload/q_auto,fl_lossy,f_auto/v1362515922/-158162.jpg",
+		"Message": "@everyone\n\nWishing you a Thanksgiving full of **love** and **happiness**.\n\nI hope all the good things happen in your life.\n\n..."
+	},
+	"thanksgiving": {
+		"Holiday":  "Thanks Giving",
+		"Hour":  6,
+		"Day":  27,
+		"Month":  11,
+		"Image":  "https://res.cloudinary.com/display97/image/upload/q_auto,fl_lossy,f_auto/v1362515922/-158162.jpg",
+		"Message": "@everyone\n\nWishing you a Thanksgiving full of **love** and **happiness**.\n\nI hope all the good things happen in your life.\n\n..."
+	},
+	"christmas": {
+		"Holiday":  "Christmas",
+		"Hour":  0,
+		"Day":  25,
+		"Month":  12,
+		"Image":  "https://media3.giphy.com/media/ABPYR9xUWHPsBH9A6y/giphy.gif?cid=ecf05e47ro4htl9036r9qvz775nwnmf1x8bqkqaj2c6i2rp5&ep=v1_gifs_search&rid=giphy.gif&ct=g",
+		"Message": "@everyone\n\nDear Santa,\n\nThis year please give me a big fat bank account and a slim body.\nYou mixed those two up last year.\n\n..."
+	},
+	"newyear": {
+		"Holiday":  "New Year",
+		"Hour":  0,
+		"Day":  1,
+		"Month":  1,
+		"Image":  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnZpNTUzcDFlNGw0cmM0cTFlOWdiZTVlMzVmc25qNzdhNmhjY3NpdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MnIcBxlyyZ9BeCmTnD/giphy.gif",
+		"Message": "@everyone\n\nMay all your troubles last as long\nas your New Year\\'s resolutions.\n\n..."
+	},
+	"mothersday": {
+		"Holiday":  "Mothers Day",
+		"Hour":  0,
+		"Day":  11,
+		"Month":  5,
+		"Image":  "https://media.giphy.com/media/l0Iy6CDDwhhx8ogGQ/giphy.gif",
+		"Message": "@everyone\n\nHappy Mothers Day!\n\n..."
+	},
+	"fathersday": {
+		"Holiday":  "Fathers Day",
+		"Hour":  0,
+		"Day":  15,
+		"Month":  6,
+		"Image":  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGRmMjIzMzNjNmRkMjNmMTBiZjY1ZTBiMWVlMmFhZmMzNjAzNzAyOSZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/fSkOEaXP639Xr5mI8E/giphy.gif",
+		"Message": "@everyone\n\nHappy Fathers Day!\n\n..."
+	}
+}
