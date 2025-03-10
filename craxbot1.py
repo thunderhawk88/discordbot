@@ -155,16 +155,19 @@ async def embed(ctx):
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
 async def embed(ctx):
     print("adminmanga has been called.")
-    message_channel = bot.get_channel(chan_craxmanga)
+    # message_channel = bot.get_channel(chan_craxmanga)
+    message_channel = bot.get_channel(chan_tests)
     cManga = getManga()
     if cManga != None:
         embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
         embed.set_image(url = str(cManga['Image']))
-        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(cManga['Rating']), inline = False)
-        embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
+        embed.set_author(name="MangaDex", url="https://mangadex.org/")
+        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(cManga['Rating']))
+        embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "*{:,}*".format(cManga['Follows']))
+        # embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
         print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
-        # await ctx.respond("Successfully added a manga recommendation to " + str(message_channel) + " channel.")
+        await ctx.respond("Successfully added a manga recommendation to " + str(message_channel) + " channel.")
     else:
         await ctx.respond("Error retrieving a manga title.")
 
