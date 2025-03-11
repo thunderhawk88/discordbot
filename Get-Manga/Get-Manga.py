@@ -114,8 +114,8 @@ Result = Get_Manga(24)
 # import cached manga titles
 CachedTitles = []
 if os.path.exists(CachedFile):
-    with open(CachedFile, 'r') as file:
-        CachedTitles = file.readlines()
+        with open(CachedFile, 'r') as file:
+            CachedTitles_ = [line.strip() for line in file]
 
 
 if (Result.status_code == 200):
