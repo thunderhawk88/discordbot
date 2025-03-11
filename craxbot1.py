@@ -7,7 +7,7 @@ serverList = os.path.join(temppath, "servers.json")
 getMangaScript = os.path.join(path_,"Get-Manga.ps1")
 mangaRecommended = os.path.join(temppath,"manga.json")
 CachedFile = os.path.join(temppath,".mangaList")
-holidaysFile = os.path.join(temppath,"holidays.json")
+CraxDataFile = os.path.join(temppath,"craxbot_data.json")
 
 #OnCrax Channel IDs
 chan_announ = 1040696808797650974 #announcements channel
@@ -114,20 +114,20 @@ def getMangaV2(_CachedFile,_mangaRecommended):
         Limit_ = Limit_ + 8
         SelectedManga_ = None
     
-def getHolidays():
-    _holidays = None
+def getCraxData(_CraxDataFile):
+    _data = None
 
     try:
-        with open(holidaysFile, "r", encoding = "utf-8-sig") as sfile:
-            _holidays = json.load(sfile)
-        print("Loaded successfully: " + str(holidaysFile))
+        with open(_CraxDataFile, "r", encoding = "utf-8-sig") as sfile:
+            _data = json.load(sfile)
+        print("Loaded successfully: " + str(_CraxDataFile))
     except Exception as e:
-        _holidays != None
+        _data != None
         print("Error loading manga json file.")
         print(e)
 
-    if (_holidays != None):
-        return _holidays
+    if (_data != None):
+        return _data
     else:
         return None
 
@@ -260,7 +260,7 @@ _session = requests.Session()
 # load json file with Holiday details
 try:
     # import holidays from a file
-    holidays = getHolidays()
+    CraxData = getCraxData(CraxDataFile)
 
     # formulate holidays
     thanksgiving = find_nth_weekday(datetime.datetime.now().year, 11, 3, 4) # November, thursday, 4th week
@@ -268,31 +268,31 @@ try:
     fathersday = find_nth_weekday(datetime.datetime.now().year, 6, 6, 3) # 3rd sunday of june
 
     # update days on holidays var
-    holidays['thanksgiving']['Day'] = thanksgiving['Day']
-    holidays['mothersday']['Day'] = mothersday['Day']
-    holidays['fathersday']['Day'] = fathersday['Day']
+    CraxData['thanksgiving']['Day'] = thanksgiving['Day']
+    CraxData['mothersday']['Day'] = mothersday['Day']
+    CraxData['fathersday']['Day'] = fathersday['Day']
     print('\nUpdated the days of thanks giving, mothers day, and fathers day holidays.')
 except Exception as e:
     print(e)
 
-if (holidays['test']['Enable'] == 'True'):
+if (CraxData['test']['Enable'] == 'True'):
     print()
-    print(f'Holiday: '  + str(holidays['thanksgiving']['Holiday']))
-    print(f'Hour: '     + str(holidays['thanksgiving']['Hour']))
-    print(f'Day: '      + str(holidays['thanksgiving']['Day']))
-    print(f'Month: '    + str(holidays['thanksgiving']['Month']))
+    print(f'Holiday: '  + str(CraxData['thanksgiving']['Holiday']))
+    print(f'Hour: '     + str(CraxData['thanksgiving']['Hour']))
+    print(f'Day: '      + str(CraxData['thanksgiving']['Day']))
+    print(f'Month: '    + str(CraxData['thanksgiving']['Month']))
     # print(f'Image: '    + str(holidays['thanksgiving']['Image']))
     # print(f'Msg: \n'    + str(holidays['thanksgiving']['Message']))
     print('===========================================')
-    print(f'Holiday: '  + str(holidays['mothersday']['Holiday']))
-    print(f'Hour: '     + str(holidays['mothersday']['Hour']))
-    print(f'Day: '      + str(holidays['mothersday']['Day']))
-    print(f'Month: '    + str(holidays['mothersday']['Month']))
+    print(f'Holiday: '  + str(CraxData['mothersday']['Holiday']))
+    print(f'Hour: '     + str(CraxData['mothersday']['Hour']))
+    print(f'Day: '      + str(CraxData['mothersday']['Day']))
+    print(f'Month: '    + str(CraxData['mothersday']['Month']))
     print('===========================================')
-    print(f'Holiday: '  + str(holidays['fathersday']['Holiday']))
-    print(f'Hour: '     + str(holidays['fathersday']['Hour']))
-    print(f'Day: '      + str(holidays['fathersday']['Day']))
-    print(f'Month: '    + str(holidays['fathersday']['Month']))
+    print(f'Holiday: '  + str(CraxData['fathersday']['Holiday']))
+    print(f'Hour: '     + str(CraxData['fathersday']['Hour']))
+    print(f'Day: '      + str(CraxData['fathersday']['Day']))
+    print(f'Month: '    + str(CraxData['fathersday']['Month']))
     print('===========================================')
 
 bot_games = ['Apex Legends','Terraria','Kingdom Come Deliverance 2','Monster Hunter Wild','Lost Ark','Civilization 7','Helldivers 2','NBA 2K25']
@@ -504,36 +504,36 @@ async def called_every_hour():
             embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
-    elif current_time.day == holidays['thanksgiving']['Day'] and current_time.month == holidays['thanksgiving']['Month'] and current_time.hour == holidays['thanksgiving']['Hour']: #ThanksGiving
+    elif current_time.day == CraxData['thanksgiving']['Day'] and current_time.month == CraxData['thanksgiving']['Month'] and current_time.hour == CraxData['thanksgiving']['Hour']: #ThanksGiving
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url=holidays['thanksgiving']['Image'])
-        await message_channel.send(holidays['thanksgiving']['Message'], embed=embed)
-    elif current_time.day == holidays['christmas']['Day'] and current_time.month == holidays['christmas']['Month'] and current_time.hour == holidays['christmas']['Hour']: #Christmas
+        embed.set_image(url=CraxData['thanksgiving']['Image'])
+        await message_channel.send(CraxData['thanksgiving']['Message'], embed=embed)
+    elif current_time.day == CraxData['christmas']['Day'] and current_time.month == CraxData['christmas']['Month'] and current_time.hour == CraxData['christmas']['Hour']: #Christmas
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url=holidays['christmas']['Image'])
-        await message_channel.send(holidays['christmas']['Message'], embed=embed)
-    elif current_time.day == holidays['newyear']['Day'] and current_time.month == holidays['newyear']['Month'] and current_time.hour == holidays['newyear']['Hour']: #NewYear
+        embed.set_image(url=CraxData['christmas']['Image'])
+        await message_channel.send(CraxData['christmas']['Message'], embed=embed)
+    elif current_time.day == CraxData['newyear']['Day'] and current_time.month == CraxData['newyear']['Month'] and current_time.hour == CraxData['newyear']['Hour']: #NewYear
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url=holidays['newyear']['Image'])
-        await message_channel.send(holidays['newyear']['Message'], embed=embed)
-    elif current_time.day == holidays['mothersday']['Day'] and current_time.month == holidays['mothersday']['Month'] and current_time.hour == holidays['mothersday']['Hour']: #MothersDay
+        embed.set_image(url=CraxData['newyear']['Image'])
+        await message_channel.send(CraxData['newyear']['Message'], embed=embed)
+    elif current_time.day == CraxData['mothersday']['Day'] and current_time.month == CraxData['mothersday']['Month'] and current_time.hour == CraxData['mothersday']['Hour']: #MothersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url=holidays['mothersday']['Image'])
-        await message_channel.send(holidays['mothersday']['Message'], embed=embed)
-    elif current_time.day == holidays['fathersday']['Day'] and current_time.month == holidays['fathersday']['Month'] and current_time.hour == holidays['fathersday']['Hour']: #FathersDay
+        embed.set_image(url=CraxData['mothersday']['Image'])
+        await message_channel.send(CraxData['mothersday']['Message'], embed=embed)
+    elif current_time.day == CraxData['fathersday']['Day'] and current_time.month == CraxData['fathersday']['Month'] and current_time.hour == CraxData['fathersday']['Hour']: #FathersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url=holidays['fathersday']['Image'])
-        await message_channel.send(holidays['fathersday']['Message'], embed=embed)
-    elif current_time.hour == holidays['test']['Hour'] and holidays['test']['Enable'] == 'True': #FathersDay
+        embed.set_image(url=CraxData['fathersday']['Image'])
+        await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
+    elif current_time.hour == CraxData['test']['Hour'] and CraxData['test']['Enable'] == 'True': #FathersDay
         message_channel = bot.get_channel(chan_tests)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url=holidays['fathersday']['Image'])
-        await message_channel.send(holidays['fathersday']['Message'], embed=embed)
+        embed.set_image(url=CraxData['fathersday']['Image'])
+        await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
 
 @called_every_hour.before_loop
 async def before():
@@ -543,4 +543,4 @@ async def before():
 called_every_hour.start()
 #end
 
-bot.run('TOKEN')
+bot.run(CraxData['Token'])
