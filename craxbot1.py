@@ -1,4 +1,4 @@
-import discord,pathlib,random,datetime,json,os,subprocess,calendar
+import discord,pathlib,random,datetime,json,os,subprocess,calendar,requests,csv
 from discord.ext import commands, tasks
 
 path_ = pathlib.Path(__file__).parent.absolute() # path to discord bot script
@@ -6,7 +6,7 @@ temppath = os.path.join(path_,"temps")
 serverList = os.path.join(temppath, "servers.json")
 getMangaScript = os.path.join(path_,"Get-Manga.ps1")
 mangaRecommended = os.path.join(temppath,"manga.json")
-mangaRecommended2 = os.path.join(temppath,"manga2.json")
+CachedFile = os.path.join(temppath,".mangaList")
 holidaysFile = os.path.join(temppath,"holidays.json")
 
 #OnCrax Channel IDs
@@ -58,6 +58,56 @@ def getManga():
     else:
         return None
     
+def getMangaV2(_CachedFile,_mangaRecommended):
+    # Get mangas
+    Result_ = Get_Manga(24)
+    # print(Result.content)
+
+    # import cached manga titles
+    CachedTitles_ = []
+    if os.path.exists(_CachedFile):
+        with open(_CachedFile, 'r') as file:
+            CachedTitles_ = [line.strip() for line in file]
+    
+    for _title in CachedTitles_:
+        print('[' + _title + ']')
+
+
+    if (Result_.status_code == 200):
+        Result_ = Result_.json()
+        SelectedManga_ = Select_Manga(Result_['data'],CachedTitles_)
+
+        # print()
+        # print('SELECTED MANGA')
+        # print('Title:       ' + SelectedManga_['Title'])
+        # print('Image:       ' + SelectedManga_['Image'])
+        # print('Link:        ' + SelectedManga_['Link'])
+        # print('Rating:      ' + SelectedManga_['Rating'])
+        # print('Follows:     ' + SelectedManga_['Follows'])
+        # print('Description: \n' + SelectedManga_['Description'])
+
+        # write to file
+        mode = "w"
+        MangaTitle_ = SelectedManga_['Title']
+        if CachedTitles_:
+            mode = "a"
+            MangaTitle_ = "\n" + str(SelectedManga_['Title'])
+        try:
+            with open(CachedFile, mode) as file:
+                file.write(MangaTitle_)
+
+            with open(_mangaRecommended, 'w', encoding='utf-8') as file:
+                json.dump(SelectedManga_, file, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print('Error updating manga titles: ' + str(e))
+
+        return SelectedManga_
+    else:
+        print()
+        print("Status Code: " + str(Result_.status_code))
+        print("Message: " + str(Result_.reason))
+        return None
+    
 def getHolidays():
     _holidays = None
 
@@ -86,8 +136,119 @@ def find_nth_weekday(year, month, weekday, nth):
                 return {"Year": year, "Month": month, "Day": week[weekday]}
     return None
 
+def make_json(csvFilePath,_key):
+    data = {}
+    with open(csvFilePath, encoding='utf-8') as csvf:
+        csvReader = csv.DictReader(csvf)
+        for rows in csvReader:
+            key = rows[_key]
+            data[key] = rows
+    return data
+
+def SendGet(_endpoint):
+    _BaseURL= "https://api.mangadex.org"
+    _URI = str(_BaseURL) + str(_endpoint)
+
+    try:
+        _response = _session.get(url = _URI)
+    except Exception as e:
+        print("[" + str(_response.status_code) + "] API failed. URI = " + str(_URI) + "")
+    
+    return _response
+
+def Get_Manga(_Limit):
+    _endpoint = "/manga?limit=" + str(_Limit) + "&order%5BfollowedCount%5D=desc"
+
+    try:
+        _result = SendGet(_endpoint)
+    except Exception as e:
+        print('Error retrieving mangas: ')
+
+    return _result
+
+def Get_MangaRating(_MangaID):
+    _endpoint = "/statistics/manga/" + str(_MangaID)
+
+    try:
+        _result = SendGet(_endpoint)
+    except Exception as e:
+        print('Error retrieving manga rating: ' + str(e))
+
+    return _result
+
+def Get_MangaArtFilename(_CoverArtID):
+    _endpoint = "/cover/" + str(_CoverArtID) + "?includes%5B%5D=manga"
+
+    try:
+        _result = SendGet(_endpoint)
+    except Exception as e:
+        print('Error retrieving cover filename: ' + str(e))
+
+    return _result
+
+def Select_Manga(_MangaList,_CachedTitles):
+    MangaURL_ = "https://mangadex.org/title/"
+
+    for manga in _MangaList:
+        # clear variables
+        Rating_ = None
+        CoverArtID_ = None
+        CoverArtFilename_ = None
+        ImageLink_ = None
+        MangaID_ = None
+        Follows_ = None
+        Title = None
+
+        # check if the mangta title has already been recommended before
+        if 'en' in manga['attributes']['title']:
+            Title = manga['attributes']['title']['en']
+        else:
+            for key in manga['attributes']['title']: 
+                Title = manga['attributes']['title'][key]
+                break
+
+        if Title not in _CachedTitles:
+            MangaID_ = manga['id']
+
+            # get ratings
+            Rating_ = Get_MangaRating(MangaID_)
+            if (Rating_.status_code == 200):
+                Rating_ = Rating_.json()
+                Follows_ = Rating_['statistics'][MangaID_]['follows']
+                Rating_ = Rating_['statistics'][MangaID_]['rating']['average']
+
+            # get cover art id
+            # loop thru the array to find an element with type=cover_art; return the id
+            CoverArtID_ = [cdict for cdict in manga['relationships'] if cdict["type"] == 'cover_art'][0]['id']
+
+            # get cover art filename
+            CoverArtFilename_ = Get_MangaArtFilename(CoverArtID_)
+
+            # generate cover art link
+            if (CoverArtFilename_.status_code == 200):
+                CoverArtFilename_ = CoverArtFilename_ .json()
+                ImageLink_ = "https://uploads.mangadex.org/covers/" + str(MangaID_) + "/" + str(CoverArtFilename_['data']['attributes']['fileName'])
+            else:
+                ImageLink_ = "ERROR"
+
+            return json.loads(json.dumps({
+                "Title": Title,
+                "ID": str(MangaID_),
+                "Description": str(manga['attributes']['description']['en'].replace("\u003e","").replace("\u003c","")),
+                "Image": str(ImageLink_),
+                "Link": str(MangaURL_) + str(MangaID_),
+                "Rating": str(Rating_), # average rating
+                "Follows": str(Follows_)
+            }))
+
+
+############ END OF FUNCTIONS ###############
+
 # bot = discord.Bot(intents=discord.Intents.all())
 bot = discord.Bot(intents=discord.Intents.all())
+
+# start a requests session
+_session = requests.Session()
 
 # load json file with Holiday details
 try:
@@ -203,13 +364,22 @@ async def embed(ctx):
     print("adminmanga has been called.")
     # message_channel = bot.get_channel(chan_craxmanga)
     message_channel = bot.get_channel(chan_tests)
-    cManga = getManga()
+    cManga = getMangaV2(CachedFile,mangaRecommended)
+
+    print()
+    print('Title:   ' + cManga['Title'])
+    print('Link:    ' + cManga['Link'])
+    print('Cover:   ' + cManga['Image'])
+    print('Rating:  ' + cManga['Rating'] + " | " + str(type(cManga['Rating'])))
+    print('Follows: ' + cManga['Follows'] + " | " + str(type(cManga['Follows'])))
+    print()
+
     if cManga != None:
         embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
         embed.set_image(url = str(cManga['Image']))
         embed.set_author(name="MangaDex", url="https://mangadex.org/")
-        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(cManga['Rating']))
-        embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "*{:,}*".format(cManga['Follows']))
+        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(float(cManga['Rating'])))
+        embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "*{:,}*".format(int(cManga['Follows'])))
         # embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
         print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
