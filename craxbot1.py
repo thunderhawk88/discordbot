@@ -1,4 +1,4 @@
-import discord,pathlib,random,datetime,json,os,subprocess,calendar,requests,csv
+import discord,pathlib,random,datetime,json,os,subprocess,calendar,requests,csv,time
 from discord.ext import commands, tasks
 
 path_ = pathlib.Path(__file__).parent.absolute() # path to discord bot script
@@ -59,54 +59,60 @@ def getManga():
         return None
     
 def getMangaV2(_CachedFile,_mangaRecommended):
-    # Get mangas
-    Result_ = Get_Manga(24)
-    # print(Result.content)
+    Limit_ = 24
+    SelectedManga_ = None
 
-    # import cached manga titles
-    CachedTitles_ = []
-    if os.path.exists(_CachedFile):
-        with open(_CachedFile, 'r') as file:
-            CachedTitles_ = [line.strip() for line in file]
-    
-    for _title in CachedTitles_:
-        print('[' + _title + ']')
+    while SelectedManga_ == None:
+        # Get mangas
+        Result_ = Get_Manga(Limit_)
+        # print(Result.content)
 
+        # import cached manga titles
+        CachedTitles_ = []
+        if os.path.exists(_CachedFile):
+            with open(_CachedFile, 'r') as file:
+                CachedTitles_ = [line.strip() for line in file]
+        
+        # for _title in CachedTitles_:
+        #     print('[' + _title + ']')
 
-    if (Result_.status_code == 200):
-        Result_ = Result_.json()
-        SelectedManga_ = Select_Manga(Result_['data'],CachedTitles_)
+        if (Result_.status_code == 200):
+            Result_ = Result_.json()
+            SelectedManga_ = Select_Manga(Result_['data'],CachedTitles_)
 
-        # print()
-        # print('SELECTED MANGA')
-        # print('Title:       ' + SelectedManga_['Title'])
-        # print('Image:       ' + SelectedManga_['Image'])
-        # print('Link:        ' + SelectedManga_['Link'])
-        # print('Rating:      ' + SelectedManga_['Rating'])
-        # print('Follows:     ' + SelectedManga_['Follows'])
-        # print('Description: \n' + SelectedManga_['Description'])
+            if (SelectedManga_ != None):
+                # print()
+                # print('SELECTED MANGA')
+                # print('Title:       ' + SelectedManga_['Title'])
+                # print('Image:       ' + SelectedManga_['Image'])
+                # print('Link:        ' + SelectedManga_['Link'])
+                # print('Rating:      ' + SelectedManga_['Rating'])
+                # print('Follows:     ' + SelectedManga_['Follows'])
+                # print('Description: \n' + SelectedManga_['Description'])
 
-        # write to file
-        mode = "w"
-        MangaTitle_ = SelectedManga_['Title']
-        if CachedTitles_:
-            mode = "a"
-            MangaTitle_ = "\n" + str(SelectedManga_['Title'])
-        try:
-            with open(CachedFile, mode) as file:
-                file.write(MangaTitle_)
+                # write to file
+                mode = "w"
+                MangaTitle_ = SelectedManga_['Title']
+                if CachedTitles_:
+                    mode = "a"
+                    MangaTitle_ = "\n" + str(SelectedManga_['Title'])
+                try:
+                    with open(CachedFile, mode) as file:
+                        file.write(MangaTitle_)
 
-            with open(_mangaRecommended, 'w', encoding='utf-8') as file:
-                json.dump(SelectedManga_, file, ensure_ascii=False, indent=4)
-        except Exception as e:
-            print('Error updating manga titles: ' + str(e))
+                    with open(_mangaRecommended, 'w', encoding='utf-8') as file:
+                        json.dump(SelectedManga_, file, ensure_ascii=False, indent=4)
+                except Exception as e:
+                    print('Error updating manga titles: ' + str(e))
 
-        return SelectedManga_
-    else:
-        print()
-        print("Status Code: " + str(Result_.status_code))
-        print("Message: " + str(Result_.reason))
-        return None
+                return SelectedManga_
+        else:
+            print()
+            print("Status Code: " + str(Result_.status_code))
+            print("Message: " + str(Result_.reason))
+            return None
+        Limit_ = Limit_ + 8
+        SelectedManga_ = None
     
 def getHolidays():
     _holidays = None
@@ -240,6 +246,7 @@ def Select_Manga(_MangaList,_CachedTitles):
                 "Rating": str(Rating_), # average rating
                 "Follows": str(Follows_)
             }))
+    return None
 
 
 ############ END OF FUNCTIONS ###############
@@ -361,7 +368,7 @@ async def embed(ctx):
 
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
 async def embed(ctx):
-    print("adminmanga has been called.")
+    print("\nadminmanga has been called.")
     # message_channel = bot.get_channel(chan_craxmanga)
     message_channel = bot.get_channel(chan_tests)
     cManga = getMangaV2(CachedFile,mangaRecommended)
@@ -477,9 +484,18 @@ async def called_every_hour():
         await crax_serv.purge(limit=500)
         await crax_evnt.purge(limit=500)
     elif current_day.weekday() == 5 and current_time.hour == 8: # Post Hot manga; current_day().weekday() = 0 is monday, sunday is 6.
-        print("It is Saturday!")
+        print("\nIt is Saturday!")
         message_channel = bot.get_channel(chan_craxmanga)
-        cManga = getManga()
+        cManga = getMangaV2(CachedFile,mangaRecommended)
+
+        print()
+        print('Title:   ' + cManga['Title'])
+        print('Link:    ' + cManga['Link'])
+        print('Cover:   ' + cManga['Image'])
+        print('Rating:  ' + cManga['Rating'] + " | " + str(type(cManga['Rating'])))
+        print('Follows: ' + cManga['Follows'] + " | " + str(type(cManga['Follows'])))
+        print()
+
         if cManga != None:
             embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
             embed.set_image(url = str(cManga['Image']))
