@@ -95,6 +95,7 @@ def Select_Manga(_MangaList,_CachedTitles):
                 "Rating": str(Rating_), # average rating
                 "Follows": str(Follows_)
             }))
+    return None
 
 
 
@@ -107,47 +108,53 @@ temppath = os.path.join(path_,"temps")
 mangaRecommended = os.path.join(temppath,"manga.json")
 CachedFile = os.path.join(temppath,".mangaList")
 
-# Get mangas
-Result = Get_Manga(24)
-# print(Result.content)
+Limit = 24
+SelectedManga = None
 
-# import cached manga titles
-CachedTitles = []
-if os.path.exists(CachedFile):
-        with open(CachedFile, 'r') as file:
-            CachedTitles_ = [line.strip() for line in file]
+while SelectedManga == None:
+    # Get mangas
+    Result = Get_Manga(Limit)
+    # print(Result.content)
+
+    # import cached manga titles
+    CachedTitles = []
+    if os.path.exists(CachedFile):
+            with open(CachedFile, 'r') as file:
+                CachedTitles_ = [line.strip() for line in file]
 
 
-if (Result.status_code == 200):
-    Result = Result.json()
-    SelectedManga = Select_Manga(Result['data'],CachedTitles)
+    if (Result.status_code == 200):
+        Result = Result.json()
+        SelectedManga = Select_Manga(Result['data'],CachedTitles)
 
-    print()
-    print('SELECTED MANGA')
-    print('Title:       ' + SelectedManga['Title'])
-    print('Image:       ' + SelectedManga['Image'])
-    print('Link:        ' + SelectedManga['Link'])
-    print('Rating:      ' + SelectedManga['Rating'])
-    print('Follows:     ' + SelectedManga['Follows'])
-    print('Description: \n' + SelectedManga['Description'])
+        print()
+        print('SELECTED MANGA')
+        print('Title:       ' + SelectedManga['Title'])
+        print('Image:       ' + SelectedManga['Image'])
+        print('Link:        ' + SelectedManga['Link'])
+        print('Rating:      ' + SelectedManga['Rating'])
+        print('Follows:     ' + SelectedManga['Follows'])
+        print('Description: \n' + SelectedManga['Description'])
 
-    # write to file
-    mode = "w"
-    MangaTitle = SelectedManga['Title']
-    if CachedTitles:
-        mode = "a"
-        MangaTitle = "\n" + str(SelectedManga['Title'])
-    try:
-        with open(CachedFile, mode) as file:
-            file.write(MangaTitle)
+        # write to file
+        mode = "w"
+        MangaTitle = SelectedManga['Title']
+        if CachedTitles:
+            mode = "a"
+            MangaTitle = "\n" + str(SelectedManga['Title'])
+        try:
+            with open(CachedFile, mode) as file:
+                file.write(MangaTitle)
 
-        with open(mangaRecommended, 'w', encoding='utf-8') as file:
-            json.dump(SelectedManga, file, ensure_ascii=False, indent=4)
-    except Exception as e:
-        print('Error updating manga titles: ' + str(e))
-else:
-    print()
-    print("Status Code: " + str(Result.status_code))
-    print("Message: " + str(Result.reason))
-
+            with open(mangaRecommended, 'w', encoding='utf-8') as file:
+                json.dump(SelectedManga, file, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print('Error updating manga titles: ' + str(e))
+    else:
+        print()
+        print("Status Code: " + str(Result.status_code))
+        print("Message: " + str(Result.reason))
+    Limit = Limit + 8
+    SelectedManga = None
+    
 print()
