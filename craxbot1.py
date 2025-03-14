@@ -151,9 +151,8 @@ def make_json(csvFilePath,_key):
             data[key] = rows
     return data
 
-def SendGet(_endpoint):
-    _BaseURL= "https://api.mangadex.org"
-    _URI = str(_BaseURL) + str(_endpoint)
+def SendGet(_baseURL,_endpoint):
+    _URI = str(_baseURL) + str(_endpoint)
 
     try:
         _response = _session.get(url = _URI)
@@ -163,30 +162,33 @@ def SendGet(_endpoint):
     return _response
 
 def Get_Manga(_Limit):
+    _baseURL= "https://api.mangadex.org"
     _endpoint = "/manga?limit=" + str(_Limit) + "&order%5BfollowedCount%5D=desc"
 
     try:
-        _result = SendGet(_endpoint)
+        _result = SendGet(_baseURL,_endpoint)
     except Exception as e:
         print('Error retrieving mangas: ')
 
     return _result
 
 def Get_MangaRating(_MangaID):
+    _baseURL= "https://api.mangadex.org"
     _endpoint = "/statistics/manga/" + str(_MangaID)
 
     try:
-        _result = SendGet(_endpoint)
+        _result = SendGet(_baseURL,_endpoint)
     except Exception as e:
         print('Error retrieving manga rating: ' + str(e))
 
     return _result
 
 def Get_MangaArtFilename(_CoverArtID):
+    _baseURL= "https://api.mangadex.org"
     _endpoint = "/cover/" + str(_CoverArtID) + "?includes%5B%5D=manga"
 
     try:
-        _result = SendGet(_endpoint)
+        _result = SendGet(_baseURL,_endpoint)
     except Exception as e:
         print('Error retrieving cover filename: ' + str(e))
 
