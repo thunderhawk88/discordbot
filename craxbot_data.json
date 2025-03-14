@@ -1,5 +1,6 @@
 ﻿{
 	"Token": "TOKEN",
+	"imdbToken": "TOKEN",
 	"test": {
 		"Holiday":  "Test Holiday",
 		"Enable": "True",
