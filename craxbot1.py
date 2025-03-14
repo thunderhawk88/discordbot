@@ -6,7 +6,8 @@ temppath = os.path.join(path_,"temps")
 serverList = os.path.join(temppath, "servers.json")
 getMangaScript = os.path.join(path_,"Get-Manga.ps1")
 mangaRecommended = os.path.join(temppath,"manga.json")
-CachedFile = os.path.join(temppath,".mangaList")
+CachedMangaFile = os.path.join(temppath,".mangaList")
+CachedMovieFile = os.path.join(temppath,".movieList")
 CraxDataFile = os.path.join(temppath,"craxbot_data.json")
 
 #OnCrax Channel IDs
@@ -17,6 +18,7 @@ chan_craxstats = 1138670086861897738 #crax_stats channel
 chan_craxevents = 1140037396151418951 #crax_events channel
 chan_craxservers = 1124176437344211115 #crax_servers channel
 chan_craxmanga = 1040813089735577652 #crax_animemangarecommendation channel
+chan_craxmovie = 1349947144249020417 # movie-recommendations
 #end channels
 
 def getServers():
@@ -97,11 +99,11 @@ def getMangaV2(_CachedFile,_mangaRecommended):
                     mode = "a"
                     MangaTitle_ = "\n" + str(SelectedManga_['Title'])
                 try:
-                    with open(CachedFile, mode) as file:
+                    with open(_CachedFile, mode) as file:
                         file.write(MangaTitle_)
 
-                    with open(_mangaRecommended, 'w', encoding='utf-8') as file:
-                        json.dump(SelectedManga_, file, ensure_ascii=False, indent=4)
+                    # with open(_mangaRecommended, 'w', encoding='utf-8') as file:
+                    #     json.dump(SelectedManga_, file, ensure_ascii=False, indent=4)
                 except Exception as e:
                     print('Error updating manga titles: ' + str(e))
 
@@ -151,22 +153,72 @@ def make_json(csvFilePath,_key):
             data[key] = rows
     return data
 
-def SendGet(_baseURL,_endpoint):
+def SendGet(_baseURL,_endpoint,_headers):
     _URI = str(_baseURL) + str(_endpoint)
 
     try:
-        _response = _session.get(url = _URI)
+        _response = _session.get(url = _URI, headers = _headers)
     except Exception as e:
         print("[" + str(_response.status_code) + "] API failed. URI = " + str(_URI) + "")
     
     return _response
+
+def Get_Movie(_CachedFile,_Token):
+    _baseURL= "https://imdb236.p.rapidapi.com/imdb"
+    _endpoint = "/most-popular-movies"
+    _headers = {
+        'x-rapidapi-key': _Token,
+        'x-rapidapi-host': "imdb236.p.rapidapi.com"
+    }
+    SelectedMovie_ = None
+
+    try:
+        _result = SendGet(_baseURL,_endpoint,_headers)
+    except Exception as e:
+        print('Error retrieving mangas: ')
+
+    if _result.status_code == 200:
+        _result = _result.json()
+        movie_count_ = len(_result)
+        CachedTitles_ = []
+
+        if os.path.exists(_CachedFile):
+            with open(_CachedFile, 'r') as file:
+                CachedTitles_ = [line.strip() for line in file]
+
+        while SelectedMovie_ == None:
+            rand_ = random.randrange(movie_count_ - 1)
+            if _result[rand_]['primaryTitle'] not in CachedTitles_:
+                SelectedMovie_ = _result[rand_]
+                break
+    else:
+        print('Error Movie API')
+        return None
+    
+    # convert genre from array to string
+    SelectedMovie_['genres'] = ','.join(map(str,SelectedMovie_['genres']))
+    
+    # write to file
+    mode = "w"
+    MovieTitle_ = SelectedMovie_['primaryTitle'] 
+    if CachedTitles_:
+        mode = "a"
+        MovieTitle_ = "\n" + str(SelectedMovie_['primaryTitle'])
+
+    try:
+        with open(_CachedFile, mode) as file:
+            file.write(MovieTitle_)
+    except Exception as e:
+        print('Error updating movie titles: ' + str(e))
+
+    return SelectedMovie_
 
 def Get_Manga(_Limit):
     _baseURL= "https://api.mangadex.org"
     _endpoint = "/manga?limit=" + str(_Limit) + "&order%5BfollowedCount%5D=desc"
 
     try:
-        _result = SendGet(_baseURL,_endpoint)
+        _result = SendGet(_baseURL,_endpoint,None)
     except Exception as e:
         print('Error retrieving mangas: ')
 
@@ -177,7 +229,7 @@ def Get_MangaRating(_MangaID):
     _endpoint = "/statistics/manga/" + str(_MangaID)
 
     try:
-        _result = SendGet(_baseURL,_endpoint)
+        _result = SendGet(_baseURL,_endpoint,None)
     except Exception as e:
         print('Error retrieving manga rating: ' + str(e))
 
@@ -188,7 +240,7 @@ def Get_MangaArtFilename(_CoverArtID):
     _endpoint = "/cover/" + str(_CoverArtID) + "?includes%5B%5D=manga"
 
     try:
-        _result = SendGet(_baseURL,_endpoint)
+        _result = SendGet(_baseURL,_endpoint,None)
     except Exception as e:
         print('Error retrieving cover filename: ' + str(e))
 
@@ -274,6 +326,8 @@ try:
     CraxData['mothersday']['Day'] = mothersday['Day']
     CraxData['fathersday']['Day'] = fathersday['Day']
     print('\nUpdated the days of thanks giving, mothers day, and fathers day holidays.')
+    print('\nIMDB Token: ' + str(CraxData['imdbToken']))
+    print('Bot Token:  ' + str(CraxData['Token']))
 except Exception as e:
     print(e)
 
@@ -319,7 +373,8 @@ async def on_ready():
 
 @bot.slash_command(name='crax', description="Just for testing slash command.", guild_ids=[845072861915512897])
 async def crax(ctx):
-	await ctx.respond('I am alive!')
+    print("\nChecking if bot is online.")
+    await ctx.respond('I am alive!')
 
 @bot.slash_command(name='changebotgame', description="Changes what game Craxbot is playing.", guild_ids=[845072861915512897])
 async def botgame(ctx, game: str):
@@ -373,17 +428,17 @@ async def embed(ctx):
     print("\nadminmanga has been called.")
     # message_channel = bot.get_channel(chan_craxmanga)
     message_channel = bot.get_channel(chan_tests)
-    cManga = getMangaV2(CachedFile,mangaRecommended)
-
-    print()
-    print('Title:   ' + cManga['Title'])
-    print('Link:    ' + cManga['Link'])
-    print('Cover:   ' + cManga['Image'])
-    print('Rating:  ' + cManga['Rating'] + " | " + str(type(cManga['Rating'])))
-    print('Follows: ' + cManga['Follows'] + " | " + str(type(cManga['Follows'])))
-    print()
+    cManga = getMangaV2(CachedMangaFile,mangaRecommended)
 
     if cManga != None:
+        print()
+        print('Title:   ' + cManga['Title'])
+        print('Link:    ' + cManga['Link'])
+        print('Cover:   ' + cManga['Image'])
+        print('Rating:  ' + cManga['Rating'] + " | " + str(type(cManga['Rating'])))
+        print('Follows: ' + cManga['Follows'] + " | " + str(type(cManga['Follows'])))
+        print()
+
         embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
         embed.set_image(url = str(cManga['Image']))
         embed.set_author(name="MangaDex", url="https://mangadex.org/")
@@ -396,6 +451,41 @@ async def embed(ctx):
     else:
         await ctx.respond("Error retrieving a manga title.")
 
+@bot.slash_command(name='adminmovie', description="Force post new recommended movie in a channel.")
+async def embed(ctx):
+    print("\nadminmovie has been called.")
+    message_channel = bot.get_channel(chan_tests)
+    cMovie = None
+    cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'])
+
+    if cMovie != None:
+        print()
+        print('Title:          ' + str(cMovie['primaryTitle']))
+        print('Link:           ' + str(cMovie['url']))
+        print('Release Date:   ' + str(cMovie['releaseDate']))
+        print('Cover:          ' + str(cMovie['primaryImage']))
+        print('Genre:          ' + str(cMovie['genres']))
+        print('Rating:         ' + str(cMovie['averageRating']) + " | " + str(type(cMovie['averageRating'])))
+        print('Total Runtime:  ' + str(cMovie['runtimeMinutes'] )+ " | " + str(type(cMovie['runtimeMinutes'])))
+        print()
+
+        embed = discord.Embed(title = "**" + str(cMovie['primaryTitle']) + "**", url = str(cMovie['url']), description = str(cMovie['description']), color = discord.Color.teal())
+        embed.set_image(url = str(cMovie['primaryImage']))
+        embed.set_author(name="IMDB", url="https://www.imdb.com/")
+        if (cMovie['averageRating'] == None):
+            embed.add_field(name = " ", value = " 👍 **Avg. Rating:** " + "* N/A *")
+        else:
+            embed.add_field(name = " ", value = " 👍 **Avg. Rating:** " + "*{:,}*".format(float(cMovie['averageRating'])))
+        embed.add_field(name = " ", value = " 🎬 **Total Runtime:** " + "*{:,}*".format(int(cMovie['runtimeMinutes'])) + " minutes")
+        embed.add_field(name=u"\u200b", value=u"\u200b")
+        embed.add_field(name = " ", value = " ⌛ **Release Date:** " + str(cMovie['releaseDate']))
+        embed.add_field(name = " ", value = " 🎭 **Genres:** " + str(cMovie['genres']))
+        # embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
+        print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
+        await message_channel.send(embed=embed)
+        await ctx.respond("Successfully added a movie recommendation to " + str(message_channel) + " channel.")
+    else:
+        await ctx.respond("Error retrieving a movie title.")
 ### BEGIN ACTIONS
 
 @bot.user_command(guild_ids=[845072861915512897])
@@ -488,23 +578,53 @@ async def called_every_hour():
     elif current_day.weekday() == 5 and current_time.hour == 8: # Post Hot manga; current_day().weekday() = 0 is monday, sunday is 6.
         print("\nIt is Saturday!")
         message_channel = bot.get_channel(chan_craxmanga)
-        cManga = getMangaV2(CachedFile,mangaRecommended)
-
-        print()
-        print('Title:   ' + cManga['Title'])
-        print('Link:    ' + cManga['Link'])
-        print('Cover:   ' + cManga['Image'])
-        print('Rating:  ' + cManga['Rating'] + " | " + str(type(cManga['Rating'])))
-        print('Follows: ' + cManga['Follows'] + " | " + str(type(cManga['Follows'])))
-        print()
+        cManga = getMangaV2(CachedMangaFile,mangaRecommended)
 
         if cManga != None:
+            print()
+            print('Title:   ' + cManga['Title'])
+            print('Link:    ' + cManga['Link'])
+            print('Cover:   ' + cManga['Image'])
+            print('Rating:  ' + cManga['Rating'] + " | " + str(type(cManga['Rating'])))
+            print('Follows: ' + cManga['Follows'] + " | " + str(type(cManga['Follows'])))
+            print()
+
             embed = discord.Embed(title = "**" + str(cManga['Title']) + "**", url = str(cManga['Link']), description = str(cManga['Description']), color = discord.Color.blue())
             embed.set_image(url = str(cManga['Image']))
             # embed.add_field(name = " ", value = " 👁️ **Reads:** " + "*{:,}*".format(cManga['Reads']), inline = False)
             embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(cManga['Rating']), inline = False)
             embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
             print("Posted new manga recommendation: " + str(cManga['Title']))
+        await message_channel.send(embed=embed)
+    elif current_day.weekday() == 4 and current_time.hour == 19: # Post trnding movie; current_day().weekday() = 0 is monday, sunday is 6.
+        print("\nMovie night!")
+        message_channel = bot.get_channel(chan_craxmovie)
+        cMovie = None
+        cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'])
+
+        if cMovie != None:
+            print()
+            print('Title:          ' + str(cMovie['primaryTitle']))
+            print('Link:           ' + str(cMovie['url']))
+            print('Release Date:   ' + str(cMovie['releaseDate']))
+            print('Cover:          ' + str(cMovie['primaryImage']))
+            print('Genre:          ' + str(cMovie['genres']))
+            print('Rating:         ' + str(cMovie['averageRating']) + " | " + str(type(cMovie['averageRating'])))
+            print('Total Runtime:  ' + str(cMovie['runtimeMinutes'] )+ " | " + str(type(cMovie['runtimeMinutes'])))
+            print()
+
+            embed = discord.Embed(title = "**" + str(cMovie['primaryTitle']) + "**", url = str(cMovie['url']), description = str(cMovie['description']), color = discord.Color.teal())
+            embed.set_image(url = str(cMovie['primaryImage']))
+            embed.set_author(name="IMDB", url="https://www.imdb.com/")
+            if (cMovie['averageRating'] == None):
+                embed.add_field(name = " ", value = " 👍 **Avg. Rating:** " + "* N/A *")
+            else:
+                embed.add_field(name = " ", value = " 👍 **Avg. Rating:** " + "*{:,}*".format(float(cMovie['averageRating'])))
+            embed.add_field(name = " ", value = " 🎬 **Total Runtime:** " + "*{:,}*".format(int(cMovie['runtimeMinutes'])) + " minutes")
+            embed.add_field(name=u"\u200b", value=u"\u200b")
+            embed.add_field(name = " ", value = " ⌛ **Release Date:** " + str(cMovie['releaseDate']))
+            embed.add_field(name = " ", value = " 🎭 **Genres:** " + str(cMovie['genres']))
+            print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed)
     elif current_time.day == CraxData['thanksgiving']['Day'] and current_time.month == CraxData['thanksgiving']['Month'] and current_time.hour == CraxData['thanksgiving']['Hour']: #ThanksGiving
         message_channel = bot.get_channel(chan_announ)
