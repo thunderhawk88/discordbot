@@ -41,82 +41,6 @@ def getServers():
     else:
         return 404
     
-def getManga():
-    _manga = None
-    _p = subprocess.Popen(["powershell.exe", "-File", getMangaScript])
-    _p.communicate()
-
-    try:
-        with open(mangaRecommended, "r", encoding = "utf-8-sig") as sfile:
-            _manga = json.load(sfile)
-        print("Loaded successfully: " + str(mangaRecommended))
-    except Exception as e:
-        _manga != None
-        print("Error loading manga json file.")
-        print(e)
-
-    if (_manga != None):
-        return _manga
-    else:
-        return None
-    
-def getMangaV2(_CachedFile,_WriteToFile = False):
-    Limit_ = 24
-    SelectedManga_ = None
-
-    while SelectedManga_ == None:
-        # Get mangas
-        Result_ = Get_Manga(Limit_)
-        # print(Result.content)
-
-        # import cached manga titles
-        CachedTitles_ = []
-        if os.path.exists(_CachedFile):
-            with open(_CachedFile, 'r') as file:
-                CachedTitles_ = [line.strip() for line in file]
-        
-        # for _title in CachedTitles_:
-        #     print('[' + _title + ']')
-
-        if (Result_.status_code == 200):
-            Result_ = Result_.json()
-            SelectedManga_ = Select_Manga(Result_['data'],CachedTitles_)
-
-            if (SelectedManga_ != None):
-                # print()
-                # print('SELECTED MANGA')
-                # print('Title:       ' + SelectedManga_['Title'])
-                # print('Image:       ' + SelectedManga_['Image'])
-                # print('Link:        ' + SelectedManga_['Link'])
-                # print('Rating:      ' + SelectedManga_['Rating'])
-                # print('Follows:     ' + SelectedManga_['Follows'])
-                # print('Description: \n' + SelectedManga_['Description'])
-
-                if (_WriteToFile):
-                    # write to file
-                    mode = "w"
-                    MangaTitle_ = SelectedManga_['Title']
-                    if CachedTitles_:
-                        mode = "a"
-                        MangaTitle_ = "\n" + str(SelectedManga_['Title'])
-                    try:
-                        with open(_CachedFile, mode) as file:
-                            file.write(MangaTitle_)
-
-                        # with open(_mangaRecommended, 'w', encoding='utf-8') as file:
-                        #     json.dump(SelectedManga_, file, ensure_ascii=False, indent=4)
-                    except Exception as e:
-                        print('Error updating manga titles: ' + str(e))
-
-                return SelectedManga_
-        else:
-            print()
-            print("Status Code: " + str(Result_.status_code))
-            print("Message: " + str(Result_.reason))
-            return None
-        Limit_ = Limit_ + 8
-        SelectedManga_ = None
-    
 def getCraxData(_CraxDataFile):
     _data = None
 
@@ -133,6 +57,30 @@ def getCraxData(_CraxDataFile):
         return _data
     else:
         return None
+    
+def Get_CachedTitles(_File):
+    _result = []
+    if os.path.exists(_File):
+        try:
+            with open(_File, 'r') as file:
+                _result = [line.strip() for line in file]
+        except FileNotFoundError as e:
+            _result = Set_Return(999,"Error",'Error opening file. File not found: ' + str(_File))
+            print(_result.reason)
+            return []
+        except PermissionError as e:
+            _result = Set_Return(999,"Error",'You do not have permission to open the file! ' + str(_File))
+            print(_result.reason)
+            return []
+        except ValueError as e:
+            _result = Set_Return(999,"Error",'Invalid data format!' + str(_File))
+            print(_result.reason)
+            return []
+        except IOError as e:
+            _result = Set_Return(999,"Error",'An error occurred while writing to the file!' + str(_File))
+            print(_result.reason)
+            return []
+    return _result
 
 def find_nth_weekday(year, month, weekday, nth):
     """Find the nth occurrence of a specific weekday within a given month."""
@@ -145,106 +93,155 @@ def find_nth_weekday(year, month, weekday, nth):
                 return {"Year": year, "Month": month, "Day": week[weekday]}
     return None
 
-def make_json(csvFilePath,_key):
-    data = {}
-    with open(csvFilePath, encoding='utf-8') as csvf:
-        csvReader = csv.DictReader(csvf)
-        for rows in csvReader:
-            key = rows[_key]
-            data[key] = rows
-    return data
+def WriteTo_File(_File,_Value):
+    _result = None
+    mode_ = "w"
+    MangaTitle_ = _Value
+    if os.path.exists(_File):
+        mode_ = "a"
+        MangaTitle_ = "\n" + str(_Value)
+    try:
+        with open(_File, mode_) as file:
+            file.write(MangaTitle_)
+    except Exception as e:
+        _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'Error updating file: ' + str(_File) +  "\nError Message: " + str(e))
+        print(_result.reason)
+        return _result
+    except FileNotFoundError as e:
+        _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'Error updating file. File not found: ' + str(_File))
+        print(_result.reason)
+        return _result
+    except PermissionError as e:
+        _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'You do not have permission to open the file! ' + str(_File))
+        print(_result.reason)
+        return _result
+    except ValueError as e:
+        _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'Invalid data format!' + str(_File))
+        print(_result.reason)
+        return _result
+    except IOError as e:
+        _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'An error occurred while writing to the file!' + str(_File))
+        print(_result.reason)
+        return _result
+    print('\nSuccessfully wrote to file: ' + str(_File) + "\n\tValue: " + str(_Value))
+    return Set_Return(0,"ok")
 
-def SendGet(_baseURL,_endpoint,_headers):
+class Set_Return():
+    def __init__(self, _statuscode, _result = None, _reason = None):
+        self.statuscode_ = _statuscode
+        self.result_ = _result
+        self.reason_ = _reason
+
+    def __str__(self):
+        return "{\"statud_code\":\"" + str(self.statuscode_) + "\", \"result\":\"" + str(self.result_) + "\", \"reason\":\"" + str(self.reason_) + "\"}"
+    
+    def SetStatuscode(self,_statuscode):
+        self.statuscode_ = _statuscode
+        return self.statuscode_
+
+    def SetReason(self,_reason):
+        self.reason_ = _reason
+        return self.reason_
+    
+    def SetReason(self,_result):
+        self.result_ = _result
+        return self.reason_
+    
+    @property
+    def status_code(self):
+        return self.statuscode_
+    
+    @property
+    def result(self):
+        return self.result_
+
+    @property
+    def reason(self):
+        return self.reason_
+
+def Send_Get(_baseURL,_endpoint,_headers):
     _URI = str(_baseURL) + str(_endpoint)
 
     try:
         _response = _session.get(url = _URI, headers = _headers)
-    except Exception as e:
-        print("[" + str(_response.status_code) + "] API failed. URI = " + str(_URI) + "")
-    
+    except requests.exceptions.HTTPError as e:
+        _response = Set_Return(999,"Error","[HTTPError] API failed. URI = " + str(_URI) + ". Reason: " + e.args[0])
+        print(_response.reason)
+    except requests.exceptions.ReadTimeout as e:
+        _response = Set_Return(999,"Error","[Timed Out] API failed. URI = " + str(_URI) + "")
+        print(_response.reason)
+    except requests.exceptions.MissingSchema as e:
+        _response = Set_Return(999,"Error","[MissingSchema] API failed. URI = " + str(_URI) + "")
+        print(_response.reason)
+    except requests.exceptions.ConnectionError as e:
+        _response = Set_Return(999,"Error","[ConnectionError] API failed. URI = " + str(_URI))
+        print(_response.reason)
+    except requests.exceptions.RequestException as e:
+        _response = Set_Return(999,"Error","[RequestException] API failed. URI = " + str(_URI) + "")
+        print(_response.reason)
     return _response
 
-def Get_Movie(_CachedFile,_Token):
-    _baseURL= "https://imdb236.p.rapidapi.com/imdb"
-    _endpoint = "/most-popular-movies"
-    _headers = {
-        'x-rapidapi-key': _Token,
-        'x-rapidapi-host': "imdb236.p.rapidapi.com"
-    }
-    SelectedMovie_ = None
+def getMangaV2(_CachedFile,_WriteToFile = False):
+    Limit_ = 24
+    SelectedManga_ = None
 
-    try:
-        _result = SendGet(_baseURL,_endpoint,_headers)
-    except Exception as e:
-        print('Error retrieving mangas: ')
+    while SelectedManga_ == None:
+        # Get mangas
+        Result_ = Get_Manga(Limit_)
 
-    if _result.status_code == 200:
-        _result = _result.json()
-        movie_count_ = len(_result)
-        CachedTitles_ = []
+        # import cached manga titles
+        CachedTitles_ = Get_CachedTitles(_CachedFile)
 
-        if os.path.exists(_CachedFile):
-            with open(_CachedFile, 'r') as file:
-                CachedTitles_ = [line.strip() for line in file]
+        if (Result_.status_code == 200):
+            Result_ = Result_.json()
+            SelectedManga_ = Select_Manga(Result_['data'],CachedTitles_)
 
-        while SelectedMovie_ == None:
-            rand_ = random.randrange(movie_count_ - 1)
-            if _result[rand_]['primaryTitle'] not in CachedTitles_:
-                SelectedMovie_ = _result[rand_]
-                break
-    else:
-        print('Error Movie API')
-        return None
+            if (SelectedManga_ != None):
+                if (_WriteToFile):
+                    WriteTo_File(_CachedFile,SelectedManga_['Title'])
+                return SelectedManga_
+        else:
+            print()
+            print("Status Code: " + str(Result_.status_code))
+            print("Message: " + str(Result_.reason))
+            return None
+        # increase number of manga to query; reset variable
+        Limit_ = Limit_ + 8
+        SelectedManga_ = None
     
-    # convert genre from array to string
-    SelectedMovie_['genres'] = ','.join(map(str,SelectedMovie_['genres']))
-    
-    # write to file
-    mode = "w"
-    MovieTitle_ = SelectedMovie_['primaryTitle'] 
-    if CachedTitles_:
-        mode = "a"
-        MovieTitle_ = "\n" + str(SelectedMovie_['primaryTitle'])
+def Create_MangaEmbed(_objJSON):
+    print()
+    print('Title:   ' + _objJSON['Title'])
+    print('Link:    ' + _objJSON['Link'])
+    print('Cover:   ' + _objJSON['Image'])
+    print('Rating:  ' + _objJSON['Rating'] + " | " + str(type(_objJSON['Rating'])))
+    print('Follows: ' + _objJSON['Follows'] + " | " + str(type(_objJSON['Follows'])))
+    print()
 
-    try:
-        with open(_CachedFile, mode) as file:
-            file.write(MovieTitle_)
-    except Exception as e:
-        print('Error updating movie titles: ' + str(e))
+    embed = discord.Embed(title = "**" + str(_objJSON['Title']) + "**", url = str(_objJSON['Link']), description = str(_objJSON['Description']), color = discord.Color.blue())
+    embed.set_image(url = str(_objJSON['Image']))
+    embed.set_author(name="MangaDex", url="https://mangadex.org/")
+    embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(float(_objJSON['Rating'])))
+    embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "*{:,}*".format(int(_objJSON['Follows'])))
 
-    return SelectedMovie_
+    return embed
 
 def Get_Manga(_Limit):
     _baseURL= "https://api.mangadex.org"
     _endpoint = "/manga?limit=" + str(_Limit) + "&order%5BfollowedCount%5D=desc"
-
-    try:
-        _result = SendGet(_baseURL,_endpoint,None)
-    except Exception as e:
-        print('Error retrieving mangas: ')
-
+    _result = Send_Get(_baseURL,_endpoint,None)
     return _result
 
 def Get_MangaRating(_MangaID):
     _baseURL= "https://api.mangadex.org"
     _endpoint = "/statistics/manga/" + str(_MangaID)
-
-    try:
-        _result = SendGet(_baseURL,_endpoint,None)
-    except Exception as e:
-        print('Error retrieving manga rating: ' + str(e))
-
+    _result = Send_Get(_baseURL,_endpoint,None)
     return _result
 
 def Get_MangaArtFilename(_CoverArtID):
     _baseURL= "https://api.mangadex.org"
     _endpoint = "/cover/" + str(_CoverArtID) + "?includes%5B%5D=manga"
-
-    try:
-        _result = SendGet(_baseURL,_endpoint,None)
-    except Exception as e:
-        print('Error retrieving cover filename: ' + str(e))
-
+    _result = Send_Get(_baseURL,_endpoint,None)
     return _result
 
 def Select_Manga(_MangaList,_CachedTitles):
@@ -303,22 +300,37 @@ def Select_Manga(_MangaList,_CachedTitles):
             }))
     return None
 
-def Create_MangaEmbed(_objJSON):
-    print()
-    print('Title:   ' + _objJSON['Title'])
-    print('Link:    ' + _objJSON['Link'])
-    print('Cover:   ' + _objJSON['Image'])
-    print('Rating:  ' + _objJSON['Rating'] + " | " + str(type(_objJSON['Rating'])))
-    print('Follows: ' + _objJSON['Follows'] + " | " + str(type(_objJSON['Follows'])))
-    print()
+def Get_Movie(_CachedFile,_Token,_WriteToFile = False):
+    _baseURL= "https://imdb236.p.rapidapi.com/imdb"
+    _endpoint = "/most-popular-movies"
+    _headers = {
+        'x-rapidapi-key': _Token,
+        'x-rapidapi-host': "imdb236.p.rapidapi.com"
+    }
+    SelectedMovie_ = None
 
-    embed = discord.Embed(title = "**" + str(_objJSON['Title']) + "**", url = str(_objJSON['Link']), description = str(_objJSON['Description']), color = discord.Color.blue())
-    embed.set_image(url = str(_objJSON['Image']))
-    embed.set_author(name="MangaDex", url="https://mangadex.org/")
-    embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(float(_objJSON['Rating'])))
-    embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "*{:,}*".format(int(_objJSON['Follows'])))
+    _result = Send_Get(_baseURL,_endpoint,_headers)
 
-    return embed
+    if _result.status_code == 200:
+        _result = _result.json()
+        movie_count_ = len(_result)
+        CachedTitles_ = Get_CachedTitles(_CachedFile)
+
+        while SelectedMovie_ == None:
+            rand_ = random.randrange(movie_count_ - 1)
+            if _result[rand_]['primaryTitle'] not in CachedTitles_:
+                SelectedMovie_ = _result[rand_]
+                break
+    else:
+        print(_result.reason)
+        return None
+    
+    # convert genre from array to string
+    SelectedMovie_['genres'] = ','.join(map(str,SelectedMovie_['genres']))
+    
+    if (_WriteToFile):
+        WriteTo_File(_CachedFile,SelectedMovie_['primaryTitle'])
+    return SelectedMovie_
 
 def Create_MovieEmbed(_objJSON):
     print()
@@ -454,12 +466,13 @@ async def embed(ctx):
 
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
 async def embed(ctx):
-    print("\nadminmanga has been called.")
+    print("\n========= adminmanga =========")
     # message_channel = bot.get_channel(chan_craxmanga)
     message_channel = bot.get_channel(chan_tests)
-    cManga = getMangaV2(CachedMangaFile)
+    cManga = getMangaV2(CachedMangaFile,True)
 
     if cManga != None:
+        embed_ = None
         embed_ = Create_MangaEmbed(cManga)
         print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed_)
@@ -469,12 +482,13 @@ async def embed(ctx):
 
 @bot.slash_command(name='adminmovie', description="Force post new recommended movie in a channel.")
 async def embed(ctx):
-    print("\nadminmovie has been called.")
+    print("\n========= adminmovie =========")
     message_channel = bot.get_channel(chan_tests)
     cMovie = None
     cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'])
 
     if cMovie != None:
+        embed_ = None
         embed_ = Create_MovieEmbed(cMovie)
         print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
@@ -587,16 +601,18 @@ async def called_every_hour():
         cManga = getMangaV2(CachedMangaFile,True)
 
         if cManga != None:
+            embed_ = None
             embed_ = Create_MangaEmbed(cManga)
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed_)
     elif current_day.weekday() == 4 and current_time.hour == 19 and current_time.minute == 0: # Post trnding movie; current_day().weekday() = 0 is monday, sunday is 6.
         print("\nMovie night!")
-        message_channel = bot.get_channel(chan_craxmovie)
+        message_channel = bot.get_channel(chan_craxmovie,True)
         cMovie = None
         cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'])
 
         if cMovie != None:
+            embed_ = None
             embed_ = Create_MovieEmbed(cMovie)
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
