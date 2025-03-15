@@ -566,16 +566,16 @@ async def on_message(message, guild_ids=[845072861915512897]):
 ### END REACTIONS
 
 #Holiday greetings
-@tasks.loop(hours=1)
+@tasks.loop(minutes=1)
 async def called_every_hour():
     current_time = datetime.datetime.now()
     current_day = datetime.datetime.today()
-    if ((current_time.day % 7) == 0 and current_time.hour == 4): # attemp to clear channels; current_time.hour to 4 since servers are set to restart at 5
+    if ((current_time.day % 7) == 0 and current_time.hour == 4 and current_time.minute == 0): # attemp to clear channels; current_time.hour to 4 since servers are set to restart at 5
         crax_serv = bot.get_channel(chan_craxservers)
         crax_evnt = bot.get_channel(chan_craxevents)
         await crax_serv.purge(limit=500)
         await crax_evnt.purge(limit=500)
-    elif current_day.weekday() == 5 and current_time.hour == 8: # Post Hot manga; current_day().weekday() = 0 is monday, sunday is 6.
+    elif current_day.weekday() == 5 and current_time.hour == 8 and current_time.minute == 0: # Post Hot manga; current_day().weekday() = 0 is monday, sunday is 6.
         print("\nIt is Saturday!")
         message_channel = bot.get_channel(chan_craxmanga)
         cManga = getMangaV2(CachedMangaFile,mangaRecommended)
@@ -596,7 +596,7 @@ async def called_every_hour():
             embed.set_footer(text="This is made possible by mangadex.org",icon_url="https://styles.redditmedia.com/t5_fljgj/styles/communityIcon_dodprbccfsy71.png")
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed)
-    elif current_day.weekday() == 4 and current_time.hour == 19: # Post trnding movie; current_day().weekday() = 0 is monday, sunday is 6.
+    elif current_day.weekday() == 4 and current_time.hour == 19 and current_time.minute == 8: # Post trnding movie; current_day().weekday() = 0 is monday, sunday is 6.
         print("\nMovie night!")
         message_channel = bot.get_channel(chan_craxmovie)
         cMovie = None
@@ -626,32 +626,32 @@ async def called_every_hour():
             embed.add_field(name = " ", value = " 🎭 **Genres:** " + str(cMovie['genres']))
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed)
-    elif current_time.day == CraxData['thanksgiving']['Day'] and current_time.month == CraxData['thanksgiving']['Month'] and current_time.hour == CraxData['thanksgiving']['Hour']: #ThanksGiving
+    elif current_time.day == CraxData['thanksgiving']['Day'] and current_time.month == CraxData['thanksgiving']['Month'] and current_time.hour == CraxData['thanksgiving']['Hour'] and current_time.minute == 0: #ThanksGiving
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['thanksgiving']['Image'])
         await message_channel.send(CraxData['thanksgiving']['Message'], embed=embed)
-    elif current_time.day == CraxData['christmas']['Day'] and current_time.month == CraxData['christmas']['Month'] and current_time.hour == CraxData['christmas']['Hour']: #Christmas
+    elif current_time.day == CraxData['christmas']['Day'] and current_time.month == CraxData['christmas']['Month'] and current_time.hour == CraxData['christmas']['Hour'] and current_time.minute == 0: #Christmas
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['christmas']['Image'])
         await message_channel.send(CraxData['christmas']['Message'], embed=embed)
-    elif current_time.day == CraxData['newyear']['Day'] and current_time.month == CraxData['newyear']['Month'] and current_time.hour == CraxData['newyear']['Hour']: #NewYear
+    elif current_time.day == CraxData['newyear']['Day'] and current_time.month == CraxData['newyear']['Month'] and current_time.hour == CraxData['newyear']['Hour'] and current_time.minute == 0: #NewYear
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['newyear']['Image'])
         await message_channel.send(CraxData['newyear']['Message'], embed=embed)
-    elif current_time.day == CraxData['mothersday']['Day'] and current_time.month == CraxData['mothersday']['Month'] and current_time.hour == CraxData['mothersday']['Hour']: #MothersDay
+    elif current_time.day == CraxData['mothersday']['Day'] and current_time.month == CraxData['mothersday']['Month'] and current_time.hour == CraxData['mothersday']['Hour'] and current_time.minute == 0: #MothersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['mothersday']['Image'])
         await message_channel.send(CraxData['mothersday']['Message'], embed=embed)
-    elif current_time.day == CraxData['fathersday']['Day'] and current_time.month == CraxData['fathersday']['Month'] and current_time.hour == CraxData['fathersday']['Hour']: #FathersDay
+    elif current_time.day == CraxData['fathersday']['Day'] and current_time.month == CraxData['fathersday']['Month'] and current_time.hour == CraxData['fathersday']['Hour'] and current_time.minute == 0: #FathersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['fathersday']['Image'])
         await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
-    elif current_time.hour == CraxData['test']['Hour'] and CraxData['test']['Enable'] == 'True': #FathersDay
+    elif current_time.hour == CraxData['test']['Hour'] and current_time.minute == 0 and CraxData['test']['Enable'] == 'True': #FathersDay
         message_channel = bot.get_channel(chan_tests)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['fathersday']['Image'])
