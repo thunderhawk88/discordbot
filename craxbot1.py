@@ -109,28 +109,26 @@ def WriteTo_File(_File,_Value):
     try:
         with open(_File, mode_) as file:
             file.write(MangaTitle_)
+        _result = Set_Return(0,"ok")
     except Exception as e:
         _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'Error updating file: ' + str(_File) +  "\nError Message: " + str(e))
         print(_result.reason)
-        return _result
     except FileNotFoundError as e:
         _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'Error updating file. File not found: ' + str(_File))
         print(_result.reason)
-        return _result
     except PermissionError as e:
         _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'You do not have permission to open the file! ' + str(_File))
         print(_result.reason)
-        return _result
     except ValueError as e:
         _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'Invalid data format!' + str(_File))
         print(_result.reason)
-        return _result
     except IOError as e:
         _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'An error occurred while writing to the file!' + str(_File))
         print(_result.reason)
-        return _result
+    finally:
+        file.close()
     print('\nSuccessfully wrote to file: ' + str(_File) + "\n\tValue: " + str(_Value))
-    return Set_Return(0,"ok")
+    return _result
 
 class Set_Return():
     def __init__(self, _statuscode, _result = None, _reason = None):
@@ -368,7 +366,8 @@ def Create_MovieEmbed(_objJSON):
     print()
 
     embed = discord.Embed(title = "**" + str(_objJSON['primaryTitle']) + "**", url = str(_objJSON['url']), description = str(_objJSON['description']), color = discord.Color.teal())
-    
+    embed.set_author(name="IMDB", url="https://www.imdb.com/")
+
     if (_objJSON['primaryImage'] != None):
         embed.set_image(url = str(_objJSON['primaryImage']))
 
@@ -382,7 +381,6 @@ def Create_MovieEmbed(_objJSON):
     else:
         embed.add_field(name = " ", value = " 🎬 **Total Runtime:** " + "*{:,}*".format(int(_objJSON['runtimeMinutes'])) + " minutes")
 
-    embed.set_author(name="IMDB", url="https://www.imdb.com/")
     embed.add_field(name=u"\u200b", value=u"\u200b")
 
     if (_objJSON['releaseDate'] == None):
@@ -466,14 +464,14 @@ async def on_ready():
 
 @bot.slash_command(name='crax', description="Just for testing slash command.", guild_ids=[845072861915512897])
 async def crax(ctx):
-    print("\nChecking if bot is online.")
-    await ctx.respond('I am alive!')
+    print(f'\n{ctx.author} checked if bot is online at {datetime.datetime.now().strftime("%B %d, %Y %I:%M %p")}.')
+    await ctx.respond(f'I am alive, {ctx.author.mention}')
 
 @bot.slash_command(name='changebotgame', description="Changes what game Craxbot is playing.", guild_ids=[845072861915512897])
 async def botgame(ctx, game: str):
     # game = random.choice(bot_games)
     await bot.change_presence(activity=discord.Game(name=game))
-    await ctx.respond(f'Bot game changed to {game}.')
+    await ctx.respond(f'```Bot game changed to {game}.```')
 
 @bot.slash_command(name='servers', description="Will attempt to get a list of servers owned by Crax.")
 async def embed(ctx):
@@ -487,7 +485,7 @@ async def embed(ctx):
     try:
         CraxData['Servers']
         if CraxData['Servers']['noServers'] == 'True':
-            await ctx.respond("There are no servers being hosted by Crax at this moment. Please check again later.")
+            await ctx.respond("```There are no servers being hosted by Crax at this moment. Please check again later.```")
         else:
             embedList = []
             # embed = discord.Embed(title = "**List of Servers**", description = "Here are the list of servers managed by Crax.", color = discord.Color.green())
@@ -509,7 +507,7 @@ async def embed(ctx):
             await ctx.respond("Crax servers found.", delete_after=0)
         print("============ END servers ============")
     except Exception as e:
-        await ctx.respond("Something went wrong. Please contact your discord admin.")
+        await ctx.respond("```Something went wrong. Please contact your discord admin.```")
         print('\tError: ' + str(e))
         print("============ END servers ============")
 
@@ -530,7 +528,7 @@ async def embed(ctx):
         except Exception as e:
             print('Error: ' + str(e))
     else:
-        await ctx.respond("Error retrieving a manga title.")
+        await ctx.respond("```Error retrieving a manga title.```")
     print('============ END adminmanga ============')
 @bot.slash_command(name='adminmovie', description="Force post new recommended movie in a channel.")
 async def embed(ctx):
@@ -550,7 +548,7 @@ async def embed(ctx):
             print('Error: ' + str(e))
     else:
         print('Get_Movie function returned None.')
-        await ctx.respond("Error retrieving a movie title.")
+        await ctx.respond("```Error retrieving a movie title.```")
     print('============ END adminmovie ============')
 ### BEGIN ACTIONS
 
