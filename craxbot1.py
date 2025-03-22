@@ -604,6 +604,17 @@ async def on_message(message, guild_ids=[845072861915512897]):
         crax_chan = bot.get_channel(chan_craxservers)
         await crax_chan.purge(limit=500)
 
+    # testing getting meesages on channel
+    if (message.channel.id == chan_tests and message.content == 'l'):
+        crax_chan   = bot.get_channel(chan_tests)
+        crax_movie  = bot.get_channel(chan_craxmovie)
+        # messages = [message async for message in discord.ext.interaction.guild.get_channel(0).history(limit=12)]
+        messages = await crax_movie.history(limit=1).flatten()
+        print(messages[0])
+        print(messages[0].content)
+        print(messages[0].author)
+        print(messages[0].created_at)
+
     if message.author.bot: 
         return
     else:
@@ -650,7 +661,7 @@ async def called_every_hour():
         crax_evnt = bot.get_channel(chan_craxevents)
         await crax_serv.purge(limit=500)
         await crax_evnt.purge(limit=500)
-    elif current_day.weekday() == 5 and current_time.hour == 8 and current_time.minute == 5: # Post Hot manga; current_day().weekday() = 0 is monday, sunday is 6.
+    elif current_day.weekday() == 5 and current_time.hour == 8 and current_time.minute == 0: # Post Hot manga; current_day().weekday() = 0 is monday, sunday is 6.
         print("\nIt is Saturday!")
         message_channel = bot.get_channel(chan_craxmanga)
         cManga = Get_Manga(CachedMangaFile,True)
@@ -660,11 +671,11 @@ async def called_every_hour():
             embed_ = Create_MangaEmbed(cManga)
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed_)
-    elif current_day.weekday() == 4 and current_time.hour == 19 and current_time.minute == 0: # Post trnding movie; current_day().weekday() = 0 is monday, sunday is 6.
+    elif current_day.weekday() == 5 and current_time.hour == 7 and current_time.minute == 59: # Post trending movie; current_day().weekday() = 0 is monday, sunday is 6.
         print("\nMovie night!")
-        message_channel = bot.get_channel(chan_craxmovie,True)
+        message_channel = bot.get_channel(chan_craxmovie)
         cMovie = None
-        cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'])
+        cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'],True)
 
         if cMovie != None:
             embed_ = None
