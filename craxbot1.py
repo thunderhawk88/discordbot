@@ -7,6 +7,7 @@ import os
 import subprocess
 import calendar
 import sys
+import asyncio
 from discord.ext import tasks
 
 # install and/or import requests
@@ -17,25 +18,24 @@ except ImportError:
 finally:
     import requests
 
-path_               = pathlib.Path(__file__).parent.absolute() # path to discord bot script
-temppath            = os.path.join(path_,"temps")
-serverList          = os.path.join(temppath, "servers.json")
-getMangaScript      = os.path.join(path_,"Get-Manga.ps1")
-mangaRecommended    = os.path.join(temppath,"manga.json")
-CachedMangaFile     = os.path.join(temppath,".mangaList")
-CachedMovieFile     = os.path.join(temppath,".movieList")
-CraxDataFile        = os.path.join(temppath,"craxbot_data.json")
 
-#OnCrax Channel IDs
-chan_announ         = 1040696808797650974 #announcements channel
-chan_gen            = 845072862397333506 #general in text channel
-chan_tests          = 1041382186793848922 #tests in text channel
-chan_craxstats      = 1138670086861897738 #crax_stats channel
-chan_craxevents     = 1140037396151418951 #crax_events channel
-chan_craxservers    = 1124176437344211115 #crax_servers channel
-chan_craxmanga      = 1040813089735577652 #crax_animemangarecommendation channel
-chan_craxmovie      = 1349947144249020417 # movie-recommendations
-#end channels
+########### START FUNCTIONS ###############
+
+def Check_Directory(_Path):
+    if not os.path.exists(_Path):
+        print('\tNot found: ' + _Path)
+        try:
+            os.makedirs(_Path)
+        except BaseException as e:
+            print('\t\tError creating folder: ' + _Path)
+            return False
+        except Exception as e:
+            print('\t\tError creating folder: ' + _Path)
+            return False
+        print('\t\tFolder created.')
+    else:
+        print('\tFound: ' + _Path)
+    return True
     
 def GetFileTo_JSON(_File):
     _result = None
@@ -63,7 +63,7 @@ def GetFileTo_JSON(_File):
             return None
     return _result
     
-def GetFilesTo_List(_File):
+def Get_FileContentToList(_File):
     _result = []
     
     if os.path.exists(_File):
@@ -194,7 +194,7 @@ def Get_Manga(_CachedFile,_WriteToFile = False):
         Result_ = Get_MangaList(Limit_)
 
         # import cached manga titles
-        CachedTitles_ = GetFilesTo_List(_CachedFile)
+        CachedTitles_ = Get_FileContentToList(_CachedFile)
 
         if (Result_.status_code == 200):
             Result_ = Result_.json()
@@ -213,32 +213,6 @@ def Get_Manga(_CachedFile,_WriteToFile = False):
         Limit_ = Limit_ + 8
         SelectedManga_ = None
     
-def Create_MangaEmbed(_objJSON):
-    print()
-    print('Title:   ' + _objJSON['Title'])
-    print('Link:    ' + _objJSON['Link'])
-    print('Cover:   ' + _objJSON['Image'])
-    print('Rating:  ' + _objJSON['Rating'] + " | " + str(type(_objJSON['Rating'])))
-    print('Follows: ' + _objJSON['Follows'] + " | " + str(type(_objJSON['Follows'])))
-    print()
-
-    embed = discord.Embed(title = "**" + str(_objJSON['Title']) + "**", url = str(_objJSON['Link']), description = str(_objJSON['Description']), color = discord.Color.blue())
-    embed.set_author(name="MangaDex", url="https://mangadex.org/")
-
-    if (_objJSON['Image']) != None:
-        embed.set_image(url = str(_objJSON['Image']))
-
-    if (_objJSON['Rating']) == None:
-        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "* N/A *")
-    else:
-        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(float(_objJSON['Rating'])))
-
-    if (_objJSON['Follows']) == None:
-        embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "* N/A *")
-    else:
-        embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "*{:,}*".format(int(_objJSON['Follows'])))
-    return embed
-
 def Get_MangaList(_Limit):
     _baseURL= "https://api.mangadex.org"
     _endpoint = "/manga?limit=" + str(_Limit) + "&order%5BfollowedCount%5D=desc"
@@ -328,7 +302,7 @@ def Get_Movie(_CachedFile,_Token,_WriteToFile = False):
     if _result.status_code == 200:
         _result = _result.json()
         movie_count_ = len(_result)
-        CachedTitles_ = GetFilesTo_List(_CachedFile)
+        CachedTitles_ = Get_FileContentToList(_CachedFile)
 
         num_ = 0 # number of attempts; if this exceeds 50, force break
         limit_ = 50
@@ -353,6 +327,32 @@ def Get_Movie(_CachedFile,_Token,_WriteToFile = False):
     if (_WriteToFile):
         WriteTo_File(_CachedFile,SelectedMovie_['primaryTitle'])
     return SelectedMovie_
+
+def Create_MangaEmbed(_objJSON):
+    print()
+    print('Title:   ' + _objJSON['Title'])
+    print('Link:    ' + _objJSON['Link'])
+    print('Cover:   ' + _objJSON['Image'])
+    print('Rating:  ' + _objJSON['Rating'] + " | " + str(type(_objJSON['Rating'])))
+    print('Follows: ' + _objJSON['Follows'] + " | " + str(type(_objJSON['Follows'])))
+    print()
+
+    embed = discord.Embed(title = "**" + str(_objJSON['Title']) + "**", url = str(_objJSON['Link']), description = str(_objJSON['Description']), color = discord.Color.blue())
+    embed.set_author(name="MangaDex", url="https://mangadex.org/")
+
+    if (_objJSON['Image']) != None:
+        embed.set_image(url = str(_objJSON['Image']))
+
+    if (_objJSON['Rating']) == None:
+        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "* N/A *")
+    else:
+        embed.add_field(name = " ", value = " ⭐ **Avg. Rating:** " + "*{:,}*".format(float(_objJSON['Rating'])))
+
+    if (_objJSON['Follows']) == None:
+        embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "* N/A *")
+    else:
+        embed.add_field(name = " ", value = " 🔖 **Bookmarks:** " + "*{:,}*".format(int(_objJSON['Follows'])))
+    return embed
 
 def Create_MovieEmbed(_objJSON):
     print()
@@ -388,13 +388,75 @@ def Create_MovieEmbed(_objJSON):
     else:
         embed.add_field(name = " ", value = " ⌛ **Release Date:** " + str(_objJSON['releaseDate']))
 
-    if (_objJSON['releaseDate'] == None):
+    if (_objJSON['genres'] == None):
         embed.add_field(name = " ", value = " 🎭 **Genres:** " + "* N/A *")
     else:
         embed.add_field(name = " ", value = " 🎭 **Genres:** " + str(_objJSON['genres']))
     return embed
 
+def Get_Screenshot(_Path,_Count):
+    DirFiles_       = []
+    SelectedFiles_  = []
+    FileName_       = None
+
+    # get all filenames inside folder _Path
+    for x in os.listdir(_Path):
+        if x.lower().endswith(('jpeg','jpg','png','bmp','webm')):   # only allow specific file types
+            DirFiles_.append(x)
+    DirFilesLength_ = len(DirFiles_)
+
+    if DirFilesLength_ > 0 and DirFilesLength_ > _Count:
+        LoopCount_ = 1              # tracks to current number of loops
+        LoopLimit_ = _Count + 20    # limits the loop to total count plus 20 loops, so it does not get stuck in a loop
+        while len(SelectedFiles_) < _Count:
+            try:
+                FileName_ = random.choice(DirFiles_)  # get random file from DirFiles_ list
+                if FileName_ not in SelectedFiles_:
+                    SelectedFiles_.append(FileName_)
+            except Exception as e:
+                print('Encountered an error: ' + e)
+            except BaseException as e:
+                print('Encountered an error: ' + e)
+            
+            if LoopCount_ == LoopLimit_:    # check if looplimit has been reacher. Break look if it reached limit
+                print('Loop limit reached: ' + str(LoopLimit_))
+                return None
+            LoopCount_ = LoopCount_ + 1     # increment the loop count by 1
+            FileName_ = None                # clear variable for next loop
+    elif DirFilesLength_ == 0:              # if folder does not have files, return None
+        return None
+    else:
+        SelectedFiles_ = DirFiles_          # just get all files inside directory  
+    return SelectedFiles_
+
 ############ END OF FUNCTIONS ###############
+
+# files and folders full path
+CurrentDir          = pathlib.Path(__file__).parent.absolute()      # path to discord bot script
+TempPath            = os.path.join(CurrentDir,"Temp")               # path to Temp folder
+ScreenshotsPath     = os.path.join(CurrentDir,"Screenshots")        # path to Screenshots folder
+SArchivedPath       = os.path.join(ScreenshotsPath,"Archived")      # path to Screenshots folder
+CachedMangaFile     = os.path.join(TempPath,".mangaList")           # file
+CachedMovieFile     = os.path.join(TempPath,".movieList")           # file
+CraxDataFile        = os.path.join(TempPath,"craxbot_data.json")    # file
+
+# OnCrax Channel IDs
+chan_announ             = 1040696808797650974   #announcements channel
+chan_gen                = 845072862397333506    #general in text channel
+chan_tests              = 1041382186793848922   #tests in text channel
+chan_craxstats          = 1138670086861897738   #crax_stats channel
+chan_craxevents         = 1140037396151418951   #crax_events channel
+chan_craxservers        = 1124176437344211115   #crax_servers channel
+chan_craxmanga          = 1040813089735577652   #crax_animemangarecommendation channel
+chan_craxmovie          = 1349947144249020417   # movie-recommendations
+chan_clipshighlights    = 845072862397333507    # clips-and-highligths
+
+# check if all directories exists; create if not
+print()
+print('Checking all folders:')
+Check_Directory(TempPath)
+Check_Directory(ScreenshotsPath)
+Check_Directory(SArchivedPath)
 
 # bot = discord.Bot(intents=discord.Intents.all())
 bot = discord.Bot(intents=discord.Intents.all())
@@ -403,6 +465,7 @@ bot = discord.Bot(intents=discord.Intents.all())
 _session = requests.Session()
 
 # load json file with Holiday details
+print()
 try:
     # import holidays from a file
     CraxData = GetFileTo_JSON(CraxDataFile)
@@ -416,31 +479,31 @@ try:
     CraxData['thanksgiving']['Day'] = thanksgiving['Day']
     CraxData['mothersday']['Day'] = mothersday['Day']
     CraxData['fathersday']['Day'] = fathersday['Day']
-    print('\nUpdated the days of thanks giving, mothers day, and fathers day holidays.')
-    print('\nIMDB Token: ' + str(CraxData['imdbToken']))
-    print('Bot Token:  ' + str(CraxData['Token']))
+    print('\tUpdated the days of thanks giving, mothers day, and fathers day holidays.')
+    print('\tIMDB Token: ' + str(CraxData['imdbToken']))
+    print('\tBot Token:  ' + str(CraxData['Token']))
 except Exception as e:
     print(e)
 
 if (CraxData['test']['Enable'] == 'True'):
     print()
-    print(f'Holiday: '  + str(CraxData['thanksgiving']['Holiday']))
-    print(f'Hour: '     + str(CraxData['thanksgiving']['Hour']))
-    print(f'Day: '      + str(CraxData['thanksgiving']['Day']))
-    print(f'Month: '    + str(CraxData['thanksgiving']['Month']))
+    print(f'\tHoliday: '  + str(CraxData['thanksgiving']['Holiday']))
+    print(f'\tHour: '     + str(CraxData['thanksgiving']['Hour']))
+    print(f'\tDay: '      + str(CraxData['thanksgiving']['Day']))
+    print(f'\tMonth: '    + str(CraxData['thanksgiving']['Month']))
     # print(f'Image: '    + str(holidays['thanksgiving']['Image']))
     # print(f'Msg: \n'    + str(holidays['thanksgiving']['Message']))
-    print('===========================================')
-    print(f'Holiday: '  + str(CraxData['mothersday']['Holiday']))
-    print(f'Hour: '     + str(CraxData['mothersday']['Hour']))
-    print(f'Day: '      + str(CraxData['mothersday']['Day']))
-    print(f'Month: '    + str(CraxData['mothersday']['Month']))
-    print('===========================================')
-    print(f'Holiday: '  + str(CraxData['fathersday']['Holiday']))
-    print(f'Hour: '     + str(CraxData['fathersday']['Hour']))
-    print(f'Day: '      + str(CraxData['fathersday']['Day']))
-    print(f'Month: '    + str(CraxData['fathersday']['Month']))
-    print('===========================================')
+    print('\t===========================================')
+    print(f'\tHoliday: '  + str(CraxData['mothersday']['Holiday']))
+    print(f'\tHour: '     + str(CraxData['mothersday']['Hour']))
+    print(f'\tDay: '      + str(CraxData['mothersday']['Day']))
+    print(f'\tMonth: '    + str(CraxData['mothersday']['Month']))
+    print('\t===========================================')
+    print(f'\tHoliday: '  + str(CraxData['fathersday']['Holiday']))
+    print(f'\tHour: '     + str(CraxData['fathersday']['Hour']))
+    print(f'\tDay: '      + str(CraxData['fathersday']['Day']))
+    print(f'\tMonth: '    + str(CraxData['fathersday']['Month']))
+    print('\t===========================================')
 
 bot_games = ['Apex Legends','Terraria','Kingdom Come Deliverance 2','Monster Hunter Wild','Lost Ark','Civilization 7','Helldivers 2','NBA 2K25']
 @bot.event
@@ -454,11 +517,11 @@ async def on_ready():
     # # Setting `Watching ` status
     # await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="a movie"))
     # Clear CraxStats Channel
-    # print(f'Current path_: {path_}')
+    # print(f'Current CurrentDir: {CurrentDir}')
     # crax_stats = bot.get_channel(chan_craxstats)
     # await crax_stats.purge(limit=100)
     # Delete Saved message ID file; for craxStats Channel
-    # oldStats_path = f"{path_}\\temps\\.oldstats"
+    # oldStats_path = f"{CurrentDir}\\temps\\.oldstats"
     # print(oldStats_path)
     # os.remove(oldStats_path)
 
@@ -503,17 +566,17 @@ async def embed(ctx):
                                 embed.add_field(name = "**Notes:** ", value = str(CraxData['Servers'][game][server]['note']), inline = False)
                             embedList.append(embed)
             print('EmbedList: ' + str(embedList))
-            await channeltosend.send(embeds=embedList)
             await ctx.respond("Crax servers found.", delete_after=0)
+            await channeltosend.send(embeds=embedList)
         print("============ END servers ============")
     except Exception as e:
         await ctx.respond("```Something went wrong. Please contact your discord admin.```")
         print('\tError: ' + str(e))
-        print("============ END servers ============")
+        print("========================== END servers ==========================")
 
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
 async def embed(ctx):
-    print("\n============== adminmanga ==============")
+    print("\n============================ adminmanga ============================")
     # message_channel = bot.get_channel(chan_craxmanga)
     message_channel = bot.get_channel(chan_tests)
     cManga = Get_Manga(CachedMangaFile)
@@ -523,16 +586,17 @@ async def embed(ctx):
         embed_ = Create_MangaEmbed(cManga)
         print("Posted new manga recommendation: " + str(cManga['Title']))
         try:
-            await message_channel.send(embed=embed_)
             await ctx.respond("Successfully added a manga recommendation to " + str(message_channel) + " channel.", delete_after=0)
+            await message_channel.send(embed=embed_)
         except Exception as e:
             print('Error: ' + str(e))
     else:
         await ctx.respond("```Error retrieving a manga title.```")
-    print('============ END adminmanga ============')
+    print('========================== END adminmanga ==========================')
+
 @bot.slash_command(name='adminmovie', description="Force post new recommended movie in a channel.")
 async def embed(ctx):
-    print("\n============== adminmovie ==============")
+    print("\n============================ adminmovie ============================")
     message_channel = bot.get_channel(chan_tests)
     cMovie = None
     cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'])
@@ -542,14 +606,54 @@ async def embed(ctx):
         embed_ = Create_MovieEmbed(cMovie)
         print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         try:
-            await message_channel.send(embed=embed_)
             await ctx.respond("Successfully added a movie recommendation to " + str(message_channel) + " channel.", delete_after=0)
+            await message_channel.send(embed=embed_)
         except Exception as e:
             print('Error: ' + str(e))
     else:
         print('Get_Movie function returned None.')
         await ctx.respond("```Error retrieving a movie title.```")
-    print('============ END adminmovie ============')
+    print('========================== END adminmovie ==========================')
+
+@bot.slash_command(name='screenshot', description="Find a screenshot to share from server folder.")
+async def embed(ctx):
+    print("\n============================ screenshot ============================")
+    print('Caller         : ' + str(ctx.author))
+    message_channel = bot.get_channel(chan_tests)
+    Screenshots = []
+    Screenshots = Get_Screenshot(ScreenshotsPath,1)
+
+    if Screenshots != None:
+        for x in Screenshots:
+            File                = None
+            FilePath            = None
+            FilePath            = os.path.join(ScreenshotsPath,x)
+            File                = discord.File(FilePath, filename=x)
+            # AttachmentString    = "attachment://" + str(x)
+            # embed               = discord.Embed(title = " ", description = " ", color = discord.Color.green())
+            # embed.set_image(url = AttachmentString)
+
+            # try:
+            #     await message_channel.send(file=File, embed=embed)
+            #     await ctx.respond("Successfully posted an image in " + str(message_channel) + " channel.", delete_after=0)
+            # except Exception as e:
+            #     print('Error: ' + str(e))
+            try:
+                await ctx.respond("Successfully posted an image in " + str(message_channel) + " channel.", delete_after=0)
+                await message_channel.send(file=File)
+                print('Posted image: ' + str(x))
+
+                # move local file to another folder
+                os.rename(FilePath, os.path.join(SArchivedPath,x))
+            except Exception as e:
+                print('Error: ' + str(e))
+    
+            print('Selected Images: ' + ', '.join(Screenshots))
+    else:
+        await ctx.respond("```No screenshots available to share. Try again later.```")
+        print('No images found at ' + ScreenshotsPath)
+    print('========================== END screenshot ==========================')
+
 ### BEGIN ACTIONS
 
 @bot.user_command(guild_ids=[845072861915512897])
@@ -682,6 +786,30 @@ async def called_every_hour():
             embed_ = Create_MovieEmbed(cMovie)
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
+    elif current_time.hour == 11 or current_time.hour == 3:         # post random screenshot
+        print('\nTime for sreenshots!')
+        message_channel = bot.get_channel(chan_clipshighlights)
+        Screenshots = []
+        Screenshots = Get_Screenshot(ScreenshotsPath,1)
+
+        if Screenshots != None:
+            for x in Screenshots:
+                File                = None
+                FilePath            = None
+                FilePath            = os.path.join(ScreenshotsPath,x)
+                File                = discord.File(FilePath, filename=x)
+                try:
+                    await message_channel.send(file=File)
+                    print('Posted image: ' + str(x))
+
+                    # move local file to another folder
+                    os.rename(FilePath, os.path.join(SArchivedPath,x))
+                except Exception as e:
+                    print('Error: ' + str(e))
+        
+                print('Selected Images: ' + ', '.join(Screenshots))
+        else:
+            print('No images found at ' + ScreenshotsPath)
     # Holiday greetings
     elif current_time.day == CraxData['thanksgiving']['Day'] and current_time.month == CraxData['thanksgiving']['Month'] and current_time.hour == CraxData['thanksgiving']['Hour'] and current_time.minute == 0: #ThanksGiving
         message_channel = bot.get_channel(chan_announ)
