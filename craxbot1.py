@@ -786,7 +786,7 @@ async def called_every_hour():
             embed_ = Create_MovieEmbed(cMovie)
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
-    elif current_time.hour == 11 or current_time.hour == 3:         # post random screenshot
+    elif current_time.hour in [10,15,20] and current_time.minute == 00:         # post random screenshot
         print('\nTime for sreenshots!')
         message_channel = bot.get_channel(chan_clipshighlights)
         Screenshots = []
