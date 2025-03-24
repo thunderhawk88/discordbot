@@ -505,8 +505,9 @@ def Load_CraxData(_FilePath):
             print('\t\t[5] Saturday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['5'])))
             print('\t\t[6] Sunday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['6'])))
             print()
-            print('\t\tCurrent day      : ' + str(TodayDay))
-            print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours'][str(TodayDay)])))
+            print('\t\tCurrent day      : ' + str(datetime.datetime.today().weekday()) + ' | Data type: ' + str(type(datetime.datetime.today().weekday())))
+            print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())])) + ' | Element Data type:' + str(type(CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())][0])))
+            print('\t\tScheduled Mins   : ' + ', '.join(map(str,CraxData_['Screenshots']['Minutes'])) + ' | Element Data type:' + str(type(CraxData_['Screenshots']['Minutes'][0])))
             print('\t======================================================================')
     else:
         return Set_Return(999,'Error',CraxData.reason)
@@ -535,14 +536,9 @@ chan_craxmanga          = 1040813089735577652   #crax_animemangarecommendation c
 chan_craxmovie          = 1349947144249020417   # movie-recommendations
 chan_clipshighlights    = 845072862397333507    # clips-and-highligths
 
-# current day and time
-CurrentTime    = datetime.datetime.now()
-CurrentDay     = datetime.datetime.today()
-TodayDay       = CurrentDay.weekday()
-
 # check if all directories exists; create if not
 print()
-print('Checking all folders: ' + str(CurrentTime))
+print('Checking all folders: ' + str(datetime.datetime.now()))
 Check_Directory(TempPath)
 Check_Directory(ScreenshotsPath)
 Check_Directory(SArchivedPath)
@@ -603,7 +599,7 @@ async def botgame(ctx, game: str):
 async def botgame(ctx):
     print()
     print("============== Reload Crax Data ==============")
-    print('Timestamp: ' + str(CurrentTime))
+    print('Timestamp: ' + str(datetime.datetime.now()))
     message_channel = bot.get_channel(chan_tests)
     CraxDataTemp = None
     CraxDataTemp = Load_CraxData(CraxDataFile)
@@ -621,7 +617,7 @@ async def botgame(ctx):
 async def embed(ctx):
     print()
     print("============== servers ==============")
-    print('Timestamp: ' + str(CurrentTime))
+    print('Timestamp: ' + str(datetime.datetime.now()))
     channeltosend = bot.get_channel(ctx.channel.id)
     print('Target Channel: ' + str(channeltosend))
 
@@ -849,13 +845,18 @@ async def on_message(message, guild_ids=[845072861915512897]):
 # Hours is on 24
 
 @tasks.loop(minutes=1)
-async def called_every_hour():
-    if ((CurrentTime.day % 7) == 0 and CurrentTime.hour == 4 and CurrentTime.minute == 0): # attempt to clear channels; CurrentTime.hour to 4 since servers are set to restart at 5
-        crax_serv = bot.get_channel(chan_craxservers)
-        crax_evnt = bot.get_channel(chan_craxevents)
-        await crax_serv.purge(limit=500)
-        await crax_evnt.purge(limit=500)
-    elif CurrentDay.weekday() == 5 and CurrentTime.hour == 8 and CurrentTime.minute == 0: # Post Hot manga; CurrentDay().weekday() = 0 is monday, sunday is 6.
+async def called_every_min():
+    # updates the time and date; must stay here every loop to get updated time and date
+    CurrentTime    = datetime.datetime.now()
+    CurrentDay     = datetime.datetime.today()
+
+    # if ((CurrentTime.day % 7) == 0 and CurrentTime.hour == 4 and CurrentTime.minute == 0): # attempt to clear channels; CurrentTime.hour to 4 since servers are set to restart at 5
+    #     crax_serv = bot.get_channel(chan_craxservers)
+    #     crax_evnt = bot.get_channel(chan_craxevents)
+    #     await crax_serv.purge(limit=500)
+    #     await crax_evnt.purge(limit=500)
+
+    if CurrentDay.weekday() == 5 and CurrentTime.hour == 8 and CurrentTime.minute == 0: # Post Hot manga; CurrentDay().weekday() = 0 is monday, sunday is 6.
         print()
         print('It is Saturday! ' + str(CurrentTime))
         message_channel = bot.get_channel(chan_craxmanga)
@@ -866,7 +867,8 @@ async def called_every_hour():
             embed_ = Create_MangaEmbed(cManga)
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed_)
-    elif CurrentDay.weekday() == 5 and CurrentTime.hour == 7 and CurrentTime.minute == 59: # Post trending movie; CurrentDay().weekday() = 0 is monday, sunday is 6.
+
+    if CurrentDay.weekday() == 5 and CurrentTime.hour == 7 and CurrentTime.minute == 59: # Post trending movie; CurrentDay().weekday() = 0 is monday, sunday is 6.
         print()
         print('Movie night! ' + str(CurrentTime))
         message_channel = bot.get_channel(chan_craxmovie)
@@ -878,7 +880,8 @@ async def called_every_hour():
             embed_ = Create_MovieEmbed(cMovie)
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
-    elif CurrentTime.hour in CraxData['Screenshots']['Hours'][str(TodayDay)] and CurrentTime.minute == 0:         # post random screenshot
+
+    if CurrentTime.hour in (CraxData['Screenshots']['Hours'][str(CurrentDay.weekday())]) and CurrentTime.minute  in (CraxData['Screenshots']['Minutes']):         # post random screenshot
         print()
         print('Time for sreenshots! ' + str(CurrentTime))
         message_channel = bot.get_channel(chan_clipshighlights)
@@ -903,44 +906,51 @@ async def called_every_hour():
                 print('Selected Images: ' + ', '.join(Screenshots))
         else:
             print('No images found at ' + ScreenshotsPath)
+
     # Holiday greetings
-    elif CurrentTime.day == CraxData['thanksgiving']['Day'] and CurrentTime.month == CraxData['thanksgiving']['Month'] and CurrentTime.hour == CraxData['thanksgiving']['Hour'] and CurrentTime.minute == 0: #ThanksGiving
+    if CurrentTime.day == CraxData['thanksgiving']['Day'] and CurrentTime.month == CraxData['thanksgiving']['Month'] and CurrentTime.hour == CraxData['thanksgiving']['Hour'] and CurrentTime.minute == 0: #ThanksGiving
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['thanksgiving']['Image'])
         await message_channel.send(CraxData['thanksgiving']['Message'], embed=embed)
-    elif CurrentTime.day == CraxData['christmas']['Day'] and CurrentTime.month == CraxData['christmas']['Month'] and CurrentTime.hour == CraxData['christmas']['Hour'] and CurrentTime.minute == 0: #Christmas
+
+    if CurrentTime.day == CraxData['christmas']['Day'] and CurrentTime.month == CraxData['christmas']['Month'] and CurrentTime.hour == CraxData['christmas']['Hour'] and CurrentTime.minute == 0: #Christmas
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['christmas']['Image'])
         await message_channel.send(CraxData['christmas']['Message'], embed=embed)
-    elif CurrentTime.day == CraxData['newyear']['Day'] and CurrentTime.month == CraxData['newyear']['Month'] and CurrentTime.hour == CraxData['newyear']['Hour'] and CurrentTime.minute == 0: #NewYear
+
+    if CurrentTime.day == CraxData['newyear']['Day'] and CurrentTime.month == CraxData['newyear']['Month'] and CurrentTime.hour == CraxData['newyear']['Hour'] and CurrentTime.minute == 0: #NewYear
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['newyear']['Image'])
         await message_channel.send(CraxData['newyear']['Message'], embed=embed)
-    elif CurrentTime.day == CraxData['mothersday']['Day'] and CurrentTime.month == CraxData['mothersday']['Month'] and CurrentTime.hour == CraxData['mothersday']['Hour'] and CurrentTime.minute == 0: #MothersDay
+
+    if CurrentTime.day == CraxData['mothersday']['Day'] and CurrentTime.month == CraxData['mothersday']['Month'] and CurrentTime.hour == CraxData['mothersday']['Hour'] and CurrentTime.minute == 0: #MothersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['mothersday']['Image'])
         await message_channel.send(CraxData['mothersday']['Message'], embed=embed)
-    elif CurrentTime.day == CraxData['fathersday']['Day'] and CurrentTime.month == CraxData['fathersday']['Month'] and CurrentTime.hour == CraxData['fathersday']['Hour'] and CurrentTime.minute == 0: #FathersDay
+
+    if CurrentTime.day == CraxData['fathersday']['Day'] and CurrentTime.month == CraxData['fathersday']['Month'] and CurrentTime.hour == CraxData['fathersday']['Hour'] and CurrentTime.minute == 0: #FathersDay
         message_channel = bot.get_channel(chan_announ)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['fathersday']['Image'])
         await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
-    elif CurrentTime.hour == CraxData['test']['Hour'] and CurrentTime.minute == 0 and CraxData['test']['Enable'] == 'True': #FathersDay
+
+    if CurrentTime.hour == CraxData['test']['Hour'] and CurrentTime.minute == 0 and CraxData['test']['Enable'] == 'True': #FathersDay
         message_channel = bot.get_channel(chan_tests)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['fathersday']['Image'])
         await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
 
-@called_every_hour.before_loop
+print()
+@called_every_min.before_loop
 async def before():
     await bot.wait_until_ready()
-    # print("Finished waiting")
+    print("Scheduled Tasks started!")
 
-called_every_hour.start()
+called_every_min.start()
 #end
 
 bot.run(CraxData['Token'])
