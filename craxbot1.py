@@ -473,15 +473,16 @@ def Load_CraxData(_FilePath):
         print(f'\tMonth: '    + str(CraxData_['fathersday']['Month']))
         print('\t======================== Screenshots Schedule ========================')
         print('\tDays - Hours are in 24h format')
-        print('\t\tMondays  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['0'])))
-        print('\t\tTuesday  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['1'])))
-        print('\t\tWednesday: ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['2'])))
-        print('\t\tThursday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['3'])))
-        print('\t\tFriday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['4'])))
-        print('\t\tSaturday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['5'])))
-        print('\t\tSunday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['6'])))
+        print('\t\t[0] Mondays  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['0'])))
+        print('\t\t[1] Tuesday  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['1'])))
+        print('\t\t[2] Wednesday: ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['2'])))
+        print('\t\t[3] Thursday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['3'])))
+        print('\t\t[4] Friday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['4'])))
+        print('\t\t[5] Saturday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['5'])))
+        print('\t\t[6] Sunday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['6'])))
         print()
-        print('\t\tCurrent day: ' + str(TodayDay))
+        print('\t\tCurrent day      : ' + str(TodayDay))
+        print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours'][str(TodayDay)])))
         print('\t======================================================================')
 
     return CraxData_
@@ -515,7 +516,7 @@ TodayDay       = CurrentDay.weekday()
 
 # check if all directories exists; create if not
 print()
-print('Checking all folders:')
+print('Checking all folders: ' + str(CurrentTime))
 Check_Directory(TempPath)
 Check_Directory(ScreenshotsPath)
 Check_Directory(SArchivedPath)
@@ -565,7 +566,9 @@ async def botgame(ctx, game: str):
 
 @bot.slash_command(name='reloaddata', description="Force reload crax data such as holiday dates.")
 async def botgame(ctx):
-    print("\n============== Reload Crax Data ==============")
+    print()
+    print("============== Reload Crax Data ==============")
+    print('Timestamp: ' + str(CurrentTime))
     message_channel = bot.get_channel(chan_tests)
     CraxDataTemp = None
     CraxDataTemp = Load_CraxData(CraxDataFile)
@@ -581,7 +584,9 @@ async def botgame(ctx):
     
 @bot.slash_command(name='servers', description="Will attempt to get a list of servers owned by Crax.")
 async def embed(ctx):
-    print("\n============== servers ==============")
+    print()
+    print("============== servers ==============")
+    print('Timestamp: ' + str(CurrentTime))
     channeltosend = bot.get_channel(ctx.channel.id)
     print('Target Channel: ' + str(channeltosend))
 
@@ -619,7 +624,8 @@ async def embed(ctx):
 
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
 async def embed(ctx):
-    print("\n============================ adminmanga ============================")
+    print()
+    print("============================ adminmanga ============================")
     # message_channel = bot.get_channel(chan_craxmanga)
     message_channel = bot.get_channel(chan_tests)
     cManga = Get_Manga(CachedMangaFile)
@@ -639,7 +645,8 @@ async def embed(ctx):
 
 @bot.slash_command(name='adminmovie', description="Force post new recommended movie in a channel.")
 async def embed(ctx):
-    print("\n============================ adminmovie ============================")
+    print()
+    print("============================ adminmovie ============================")
     message_channel = bot.get_channel(chan_tests)
     cMovie = None
     cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'])
@@ -660,7 +667,8 @@ async def embed(ctx):
 
 @bot.slash_command(name='screenshot', description="Find a screenshot to share from server folder.")
 async def embed(ctx):
-    print("\n============================ screenshot ============================")
+    print()
+    print("============================ screenshot ============================")
     print('Caller         : ' + str(ctx.author))
     message_channel = bot.get_channel(chan_tests)
     Screenshots = []
@@ -807,7 +815,8 @@ async def called_every_hour():
         await crax_serv.purge(limit=500)
         await crax_evnt.purge(limit=500)
     elif CurrentDay.weekday() == 5 and CurrentTime.hour == 8 and CurrentTime.minute == 0: # Post Hot manga; CurrentDay().weekday() = 0 is monday, sunday is 6.
-        print("\nIt is Saturday!")
+        print()
+        print('It is Saturday! ' + str(CurrentTime))
         message_channel = bot.get_channel(chan_craxmanga)
         cManga = Get_Manga(CachedMangaFile,True)
 
@@ -817,7 +826,8 @@ async def called_every_hour():
             print("Posted new manga recommendation: " + str(cManga['Title']))
         await message_channel.send(embed=embed_)
     elif CurrentDay.weekday() == 5 and CurrentTime.hour == 7 and CurrentTime.minute == 59: # Post trending movie; CurrentDay().weekday() = 0 is monday, sunday is 6.
-        print("\nMovie night!")
+        print()
+        print('Movie night! ' + str(CurrentTime))
         message_channel = bot.get_channel(chan_craxmovie)
         cMovie = None
         cMovie = Get_Movie(CachedMovieFile,CraxData['imdbToken'],True)
@@ -827,8 +837,9 @@ async def called_every_hour():
             embed_ = Create_MovieEmbed(cMovie)
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
-    elif CurrentTime.hour in CraxData['Screenshots']['Hours'][str(TodayDay)] and CurrentTime.minute == 00:         # post random screenshot
-        print('\nTime for sreenshots!')
+    elif CurrentTime.hour in CraxData['Screenshots']['Hours'][str(TodayDay)] and CurrentTime.minute == 0:         # post random screenshot
+        print()
+        print('Time for sreenshots! ' + str(CurrentTime))
         message_channel = bot.get_channel(chan_clipshighlights)
         Screenshots = []
         Screenshots = Get_Screenshot(ScreenshotsPath,1)
