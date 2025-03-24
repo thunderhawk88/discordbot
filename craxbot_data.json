@@ -3,7 +3,7 @@
 	"imdbToken": "TOKEN",
 	"test": {
 		"Holiday":  "Test Holiday",
-		"Enable": "True",
+		"Enable": true,
 		"Hour":  0,
 		"Day":  27,
 		"Month":  11,
@@ -51,7 +51,7 @@
 		"Message": "@everyone\n\nHappy Fathers Day!\n\n..."
 	},
 	"Servers": {
-		"noServers": "True",
+		"noServers": true,
 		"palworld": {
 			"1": {
 				"servername": "Laid Back Gaming",
@@ -75,7 +75,7 @@
 	},
 	"Screenshots": {
 		"Hours": {
-			"0": [6,9,11,14,18,1],
+			"0": [6,9,11,12,14,18,1],
 			"1": [14],
 			"2": [14],
 			"3": [14],
@@ -83,6 +83,11 @@
 			"5": [6,10,14,18,20],
 			"6": [6,10,14,18,20]
 		},
-		"Minutes": [0]
+		"Minutes": [0],
+		"RandomHours": true,
+		"NumberOfHours": 4
+	},
+	"Owner": {
+		"ID": INTID
 	}
 }
