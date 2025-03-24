@@ -463,6 +463,7 @@ def Load_CraxData(_FilePath):
         print()
         print('\tIMDB Token: ' + str(CraxData_['imdbToken']))
         print('\tBot Token:  ' + str(CraxData_['Token']))
+        print('\tOwner ID:   ' + str(CraxData_['Owner']['ID']))
 
         # formulate holidays
         thanksgiving    = find_nth_weekday(datetime.datetime.now().year, 11, 3, 4) # November, thursday, 4th week
@@ -476,7 +477,8 @@ def Load_CraxData(_FilePath):
         CraxData_['fathersday']['Day']   = fathersday['Day']
         print('\tUpdated the days of thanks giving, mothers day, and fathers day holidays.')
 
-        if (CraxData_['test']['Enable'] == 'True'):
+        if (CraxData_['test']['Enable']):
+
             print()
             print('\t========================    Thanksgiving      ========================')
             print(f'\tHoliday: '  + str(CraxData_['thanksgiving']['Holiday']))
@@ -504,14 +506,25 @@ def Load_CraxData(_FilePath):
             print('\t\t[4] Friday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['4'])))
             print('\t\t[5] Saturday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['5'])))
             print('\t\t[6] Sunday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['6'])))
+
+            print()
+            # generate random times for screenshots to be posted
+            if (CraxData_['Screenshots']['RandomHours']):
+                CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())] = random.sample(range(0,23),CraxData_['Screenshots']['NumberOfHours'])
+                print('\t\tRandom hours?    ' + str(CraxData_['Screenshots']['RandomHours']))
+                print('\t\tNumber of Hours: ' + str(CraxData_['Screenshots']['NumberOfHours']))
+            
             print()
             print('\t\tCurrent day      : ' + str(datetime.datetime.today().weekday()) + ' | Data type: ' + str(type(datetime.datetime.today().weekday())))
             print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())])) + ' | Element Data type:' + str(type(CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())][0])))
             print('\t\tScheduled Mins   : ' + ', '.join(map(str,CraxData_['Screenshots']['Minutes'])) + ' | Element Data type:' + str(type(CraxData_['Screenshots']['Minutes'][0])))
             print('\t======================================================================')
     else:
-        return Set_Return(999,'Error',CraxData.reason)
+        return Set_Return(999,'Error',CraxData_.reason)
     return Set_Return(0,CraxData_,'ok')
+
+def restart_bot(): 
+  os.execv(sys.executable, ['python'] + sys.argv)
 
 ############ END OF FUNCTIONS ###############
 
@@ -558,6 +571,9 @@ if (CraxData.status_code == 0):
     CraxData = CraxData.result
     # Update craxdata
     # Export_Dict(CraxData,CraxDataFileMod)
+
+    # generate random times for screenshots to be called/posted
+    CraxData['Screenshots']
 else:
     print('\tError: ' + CraxData.reason)
     asyncio.sleep(30)
@@ -584,6 +600,31 @@ async def on_ready():
     # print(oldStats_path)
     # os.remove(oldStats_path)
 
+@bot.slash_command(name='restartbot')
+async def restart(ctx):
+    print()
+    print(f'```{ctx.author} [{ctx.author.id}] requested to restart the bot at {datetime.datetime.now().strftime("%B %d, %Y %I:%M %p")}```')
+
+    try:
+        owner = await bot.fetch_user(CraxData['Owner']['ID'])
+        embed = discord.Embed(title = "**CraxBot0t Restart Request**", description = "", color = discord.Color.red())
+        embed.add_field(name = "**Requester**", value = str(ctx.author), inline = False)
+        embed.add_field(name = "**Server Name**", value = "OnCrax", inline = False)
+        embed.add_field(name = "**Channel Name**", value = str(ctx.channel), inline = False)
+        embed.add_field(name = "**Timestamp** ", value = datetime.datetime.now().strftime("%B %d, %Y %I:%M %p"), inline = False)
+    except BaseException as e:
+        print(e)
+    except Exception as e:
+        print(e)
+        
+    await owner.send(embed=embed)
+    
+    if ctx.author.id == CraxData['Owner']['ID']: # owener's discord id
+        await ctx.respond("```Restarting bot...```")
+        restart_bot()
+    else:
+        await ctx.respond(f'```Unauthorized access attempt by user {ctx.author}. This has been logged.```')
+
 @bot.slash_command(name='crax', description="Just for testing slash command.", guild_ids=[845072861915512897])
 async def crax(ctx):
     print(f'\n{ctx.author} checked if bot is online at {datetime.datetime.now().strftime("%B %d, %Y %I:%M %p")}.')
@@ -603,8 +644,9 @@ async def botgame(ctx):
     message_channel = bot.get_channel(chan_tests)
     CraxDataTemp = None
     CraxDataTemp = Load_CraxData(CraxDataFile)
-    if CraxDataTemp != None:
-        CraxData = CraxDataTemp
+    if CraxDataTemp.status_code == 0:
+        CraxData = CraxDataTemp.result
+        Export_Dict(CraxData,CraxDataFile)
         print('\tSuccessfully reloaded crax data: ' + CraxDataFile)
         await message_channel.send('```Reloaded crax data```')
         await ctx.respond('```Reloaded crax data```', delete_after=0)
@@ -629,7 +671,7 @@ async def embed(ctx):
 
         try:
             CraxData['Servers']
-            if CraxData['Servers']['noServers'] == 'True':
+            if CraxData['Servers']['noServers']:
                 await ctx.respond("```There are no servers being hosted by Crax at this moment. Please check again later.```")
             else:
                 embedList = []
@@ -938,7 +980,7 @@ async def called_every_min():
         embed.set_image(url=CraxData['fathersday']['Image'])
         await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
 
-    if CurrentTime.hour == CraxData['test']['Hour'] and CurrentTime.minute == 0 and CraxData['test']['Enable'] == 'True': #FathersDay
+    if CurrentTime.hour == CraxData['test']['Hour'] and CurrentTime.minute == 0 and CraxData['test']['Enable']: # Test
         message_channel = bot.get_channel(chan_tests)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['fathersday']['Image'])
