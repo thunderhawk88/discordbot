@@ -21,6 +21,39 @@ finally:
 
 ########### START FUNCTIONS ###############
 
+class Set_Return():
+    def __init__(self, _status_code = 0, _result = None, _reason = None):
+        self._status_code = _status_code
+        self._result      = _result
+        self._reason      = _reason
+
+    def __str__(self):
+        return "{\"status_code\":\"" + str(self._status_code) + "\", \"result\":\"" + str(self._result) + "\", \"reason\":\"" + str(self._reason) + "\"}"
+    
+    @property
+    def status_code(self):
+        return self._status_code
+    
+    @status_code.setter
+    def status_code(self, value):
+        self._status_code = value
+    
+    @property
+    def result(self):
+        return self._result
+    
+    @result.setter
+    def result(self, value):
+        self._result = value
+
+    @property
+    def reason(self):
+        return self._reason
+    
+    @reason.setter
+    def reason(self, value):
+        self._reason = value
+
 def Check_Directory(_Path):
     if not os.path.exists(_Path):
         print('\tNot found: ' + _Path)
@@ -37,30 +70,45 @@ def Check_Directory(_Path):
         print('\tFound: ' + _Path)
     return True
     
-def GetFileTo_JSON(_File):
+def Import_Json(_File):
     _result = None
 
     if os.path.exists(_File):
         try:
             with open(_File, "r", encoding = "utf-8-sig") as sfile:
                 _result = json.load(sfile)
-            print("Loaded successfully: " + str(_File))
+            _result = Set_Return(0,_result,'ok')
+            print("\tLoaded successfully: " + str(_File))
         except FileNotFoundError as e:
-            _result = Set_Return(999,"Error",'Error opening file. File not found: ' + str(_File))
-            print(_result.reason)
-            return None
+            _result = Set_Return(999,"\tError",'Error opening file. File not found: ' + str(_File))
         except PermissionError as e:
-            _result = Set_Return(999,"Error",'You do not have permission to open the file! ' + str(_File))
-            print(_result.reason)
-            return None
+            _result = Set_Return(999,"\tError",'You do not have permission to open the file! ' + str(_File))
         except ValueError as e:
-            _result = Set_Return(999,"Error",'Invalid data format!' + str(_File))
-            print(_result.reason)
-            return None
+            _result = Set_Return(999,"\tError",'Invalid data format!' + str(_File))
         except IOError as e:
-            _result = Set_Return(999,"Error",'An error occurred while writing to the file!' + str(_File))
-            print(_result.reason)
-            return None
+            _result = Set_Return(999,"\tError",'An error occurred while writing to the file!' + str(_File))
+    return _result
+
+def Export_Dict(_Dict,_File):
+    _result = None
+
+    try:
+        with open(_File, "w") as file_:
+            json.dump(_Dict, file_)
+        _result = Set_Return(0,'ok')
+    except Exception as e:
+        _result = Set_Return(999,"Error",'Error updating file: ' + str(_File) +  "\nError Message: " + str(e))
+    except FileNotFoundError as e:
+        _result = Set_Return(999,"Error",'Error updating file. File not found: ' + str(_File))
+    except PermissionError as e:
+        _result = Set_Return(999,"Error",'You do not have permission to open the file! ' + str(_File))
+    except ValueError as e:
+        _result = Set_Return(999,"Error",'Invalid data format!' + str(_File))
+    except IOError as e:
+        _result = Set_Return(999,"Error",'An error occurred while writing to the file!' + str(_File))
+    finally:
+        file_.close()
+    print('\tSuccessfully export a dict to file: ' + str(_File))
     return _result
     
 def Get_FileContentToList(_File):
@@ -70,22 +118,19 @@ def Get_FileContentToList(_File):
         try:
             with open(_File, 'r') as file:
                 _result = [line.strip() for line in file]
+            _result = Set_Return(0,_result,'ok')
         except FileNotFoundError as e:
             _result = Set_Return(999,"Error",'Error opening file. File not found: ' + str(_File))
             print(_result.reason)
-            return []
         except PermissionError as e:
             _result = Set_Return(999,"Error",'You do not have permission to open the file! ' + str(_File))
             print(_result.reason)
-            return []
         except ValueError as e:
             _result = Set_Return(999,"Error",'Invalid data format!' + str(_File))
             print(_result.reason)
-            return []
         except IOError as e:
             _result = Set_Return(999,"Error",'An error occurred while writing to the file!' + str(_File))
             print(_result.reason)
-            return []
     return _result
 
 def find_nth_weekday(year, month, weekday, nth):
@@ -107,8 +152,8 @@ def WriteTo_File(_File,_Value):
         mode_ = "a"
         MangaTitle_ = "\n" + str(_Value)
     try:
-        with open(_File, mode_) as file:
-            file.write(MangaTitle_)
+        with open(_File, mode_) as file_:
+            file_.write(MangaTitle_)
         _result = Set_Return(0,"ok")
     except Exception as e:
         _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'Error updating file: ' + str(_File) +  "\nError Message: " + str(e))
@@ -126,42 +171,9 @@ def WriteTo_File(_File,_Value):
         _result = Set_Return(999,"Error",'[' + str(_Value) + ']' + 'An error occurred while writing to the file!' + str(_File))
         print(_result.reason)
     finally:
-        file.close()
-    print('\nSuccessfully wrote to file: ' + str(_File) + "\n\tValue: " + str(_Value))
+        file_.close()
+    print('\tSuccessfully wrote to file: ' + str(_File) + "\n\t\tValue: " + str(_Value))
     return _result
-
-class Set_Return():
-    def __init__(self, _statuscode, _result = None, _reason = None):
-        self.statuscode_ = _statuscode
-        self.result_ = _result
-        self.reason_ = _reason
-
-    def __str__(self):
-        return "{\"statud_code\":\"" + str(self.statuscode_) + "\", \"result\":\"" + str(self.result_) + "\", \"reason\":\"" + str(self.reason_) + "\"}"
-    
-    def SetStatuscode(self,_statuscode):
-        self.statuscode_ = _statuscode
-        return self.statuscode_
-
-    def SetReason(self,_reason):
-        self.reason_ = _reason
-        return self.reason_
-    
-    def SetReason(self,_result):
-        self.result_ = _result
-        return self.reason_
-    
-    @property
-    def status_code(self):
-        return self.statuscode_
-    
-    @property
-    def result(self):
-        return self.result_
-
-    @property
-    def reason(self):
-        return self.reason_
 
 def Send_Get(_baseURL,_endpoint,_headers):
     _URI = str(_baseURL) + str(_endpoint)
@@ -195,6 +207,9 @@ def Get_Manga(_CachedFile,_WriteToFile = False):
 
         # import cached manga titles
         CachedTitles_ = Get_FileContentToList(_CachedFile)
+
+        if (CachedTitles_.status_code == 0):
+            CachedTitles_ = CachedTitles_.result
 
         if (Result_.status_code == 200):
             Result_ = Result_.json()
@@ -303,6 +318,9 @@ def Get_Movie(_CachedFile,_Token,_WriteToFile = False):
         _result = _result.json()
         movie_count_ = len(_result)
         CachedTitles_ = Get_FileContentToList(_CachedFile)
+
+        if (CachedTitles_.status_code == 0):
+            CachedTitles_ = CachedTitles_.result
 
         num_ = 0 # number of attempts; if this exceeds 50, force break
         limit_ = 50
@@ -437,55 +455,62 @@ def Load_CraxData(_FilePath):
     fathersday      = None
 
     # import holidays from a file
-    CraxData_ = GetFileTo_JSON(_FilePath)
+    CraxData_ = Import_Json(_FilePath)
 
-    # formulate holidays
-    thanksgiving    = find_nth_weekday(datetime.datetime.now().year, 11, 3, 4) # November, thursday, 4th week
-    mothersday      = find_nth_weekday(datetime.datetime.now().year, 5, 6, 2) # 2nd sunday of may
-    fathersday      = find_nth_weekday(datetime.datetime.now().year, 6, 6, 3) # 3rd sunday of june
-
-    # update days on holidays var
-    CraxData_['thanksgiving']['Day'] = thanksgiving['Day']
-    CraxData_['mothersday']['Day']   = mothersday['Day']
-    CraxData_['fathersday']['Day']   = fathersday['Day']
-    print('\tUpdated the days of thanks giving, mothers day, and fathers day holidays.')
-    print('\tIMDB Token: ' + str(CraxData_['imdbToken']))
-    print('\tBot Token:  ' + str(CraxData_['Token']))
-
-    if (CraxData_['test']['Enable'] == 'True'):
+    if (CraxData_.status_code == 0):
+        CraxData_ = CraxData_.result
+        # output tokens
         print()
-        print('\t========================    Thanksgiving      ========================')
-        print(f'\tHoliday: '  + str(CraxData_['thanksgiving']['Holiday']))
-        print(f'\tHour: '     + str(CraxData_['thanksgiving']['Hour']))
-        print(f'\tDay: '      + str(CraxData_['thanksgiving']['Day']))
-        print(f'\tMonth: '    + str(CraxData_['thanksgiving']['Month']))
-        # print(f'Image: '    + str(holidays['thanksgiving']['Image']))
-        # print(f'Msg: \n'    + str(holidays['thanksgiving']['Message']))
-        print('\t========================    Mothers Day       ========================')
-        print(f'\tHoliday: '  + str(CraxData_['mothersday']['Holiday']))
-        print(f'\tHour: '     + str(CraxData_['mothersday']['Hour']))
-        print(f'\tDay: '      + str(CraxData_['mothersday']['Day']))
-        print(f'\tMonth: '    + str(CraxData_['mothersday']['Month']))
-        print('\t========================     Fathers Day      ========================')
-        print(f'\tHoliday: '  + str(CraxData_['fathersday']['Holiday']))
-        print(f'\tHour: '     + str(CraxData_['fathersday']['Hour']))
-        print(f'\tDay: '      + str(CraxData_['fathersday']['Day']))
-        print(f'\tMonth: '    + str(CraxData_['fathersday']['Month']))
-        print('\t======================== Screenshots Schedule ========================')
-        print('\tDays - Hours are in 24h format')
-        print('\t\t[0] Mondays  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['0'])))
-        print('\t\t[1] Tuesday  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['1'])))
-        print('\t\t[2] Wednesday: ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['2'])))
-        print('\t\t[3] Thursday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['3'])))
-        print('\t\t[4] Friday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['4'])))
-        print('\t\t[5] Saturday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['5'])))
-        print('\t\t[6] Sunday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['6'])))
-        print()
-        print('\t\tCurrent day      : ' + str(TodayDay))
-        print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours'][str(TodayDay)])))
-        print('\t======================================================================')
+        print('\tIMDB Token: ' + str(CraxData_['imdbToken']))
+        print('\tBot Token:  ' + str(CraxData_['Token']))
 
-    return CraxData_
+        # formulate holidays
+        thanksgiving    = find_nth_weekday(datetime.datetime.now().year, 11, 3, 4) # November, thursday, 4th week
+        mothersday      = find_nth_weekday(datetime.datetime.now().year, 5, 6, 2) # 2nd sunday of may
+        fathersday      = find_nth_weekday(datetime.datetime.now().year, 6, 6, 3) # 3rd sunday of june
+
+        print()
+        # update days on holidays var
+        CraxData_['thanksgiving']['Day'] = thanksgiving['Day']
+        CraxData_['mothersday']['Day']   = mothersday['Day']
+        CraxData_['fathersday']['Day']   = fathersday['Day']
+        print('\tUpdated the days of thanks giving, mothers day, and fathers day holidays.')
+
+        if (CraxData_['test']['Enable'] == 'True'):
+            print()
+            print('\t========================    Thanksgiving      ========================')
+            print(f'\tHoliday: '  + str(CraxData_['thanksgiving']['Holiday']))
+            print(f'\tHour: '     + str(CraxData_['thanksgiving']['Hour']))
+            print(f'\tDay: '      + str(CraxData_['thanksgiving']['Day']))
+            print(f'\tMonth: '    + str(CraxData_['thanksgiving']['Month']))
+            # print(f'Image: '    + str(holidays['thanksgiving']['Image']))
+            # print(f'Msg: \n'    + str(holidays['thanksgiving']['Message']))
+            print('\t========================    Mothers Day       ========================')
+            print(f'\tHoliday: '  + str(CraxData_['mothersday']['Holiday']))
+            print(f'\tHour: '     + str(CraxData_['mothersday']['Hour']))
+            print(f'\tDay: '      + str(CraxData_['mothersday']['Day']))
+            print(f'\tMonth: '    + str(CraxData_['mothersday']['Month']))
+            print('\t========================     Fathers Day      ========================')
+            print(f'\tHoliday: '  + str(CraxData_['fathersday']['Holiday']))
+            print(f'\tHour: '     + str(CraxData_['fathersday']['Hour']))
+            print(f'\tDay: '      + str(CraxData_['fathersday']['Day']))
+            print(f'\tMonth: '    + str(CraxData_['fathersday']['Month']))
+            print('\t======================== Screenshots Schedule ========================')
+            print('\tDays - Hours are in 24h format')
+            print('\t\t[0] Mondays  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['0'])))
+            print('\t\t[1] Tuesday  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['1'])))
+            print('\t\t[2] Wednesday: ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['2'])))
+            print('\t\t[3] Thursday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['3'])))
+            print('\t\t[4] Friday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['4'])))
+            print('\t\t[5] Saturday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['5'])))
+            print('\t\t[6] Sunday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['6'])))
+            print()
+            print('\t\tCurrent day      : ' + str(TodayDay))
+            print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours'][str(TodayDay)])))
+            print('\t======================================================================')
+    else:
+        return Set_Return(999,'Error',CraxData.reason)
+    return Set_Return(0,CraxData_,'ok')
 
 ############ END OF FUNCTIONS ###############
 
@@ -497,6 +522,7 @@ SArchivedPath       = os.path.join(ScreenshotsPath,"Archived")      # path to Sc
 CachedMangaFile     = os.path.join(TempPath,".mangaList")           # file
 CachedMovieFile     = os.path.join(TempPath,".movieList")           # file
 CraxDataFile        = os.path.join(TempPath,"craxbot_data.json")    # file
+CraxDataFileMod     = os.path.join(TempPath,"craxbot_dataNEW.json")    # file
 
 # OnCrax Channel IDs
 chan_announ             = 1040696808797650974   #announcements channel
@@ -531,6 +557,15 @@ _session = requests.Session()
 print()
 print('Loading Crax data file:')
 CraxData = Load_CraxData(CraxDataFile)
+
+if (CraxData.status_code == 0):
+    CraxData = CraxData.result
+    # Update craxdata
+    # Export_Dict(CraxData,CraxDataFileMod)
+else:
+    print('\tError: ' + CraxData.reason)
+    asyncio.sleep(30)
+    sys.exit(500)
 
 
 bot_games = ['Apex Legends','Terraria','Kingdom Come Deliverance 2','Monster Hunter Wild','Lost Ark','Civilization 7','Helldivers 2','NBA 2K25']
@@ -591,35 +626,41 @@ async def embed(ctx):
     print('Target Channel: ' + str(channeltosend))
 
     # re-import holidays from a file
-    CraxData = GetFileTo_JSON(CraxDataFile)
+    CraxData = Import_Json(CraxDataFile)
 
-    try:
-        CraxData['Servers']
-        if CraxData['Servers']['noServers'] == 'True':
-            await ctx.respond("```There are no servers being hosted by Crax at this moment. Please check again later.```")
-        else:
-            embedList = []
-            # embed = discord.Embed(title = "**List of Servers**", description = "Here are the list of servers managed by Crax.", color = discord.Color.green())
-            for game in CraxData['Servers']:
-                if (type(CraxData['Servers'][game]) == dict):
-                    for server in CraxData['Servers'][game]:
-                        if (type(CraxData['Servers'][game][server]) == dict):
-                            embed = discord.Embed(title = "", description = "", color = discord.Color.green())
-                            embed.add_field(name = "**Game:** " + str(CraxData['Servers'][game][server]['game']), value = "", inline = False)
-                            embed.add_field(name = "**Server Name:** " + str(CraxData['Servers'][game][server]['servername']), value = "", inline = False)
-                            embed.add_field(name = "**IP & Port:** " + str(CraxData['Servers'][game][server]['ip']) + ":" + str(CraxData['Servers'][game][server]['port']), value = "", inline = False)
-                            if (CraxData['Servers'][game][server]['password'] != ''):
-                                embed.add_field(name = "**Password:** " + str(CraxData['Servers'][game][server]['password']), value = "", inline = False)
-                            if (CraxData['Servers'][game][server]['note'] != ''):
-                                embed.add_field(name = "**Notes:** ", value = str(CraxData['Servers'][game][server]['note']), inline = False)
-                            embedList.append(embed)
-            print('EmbedList: ' + str(embedList))
-            await ctx.respond("Crax servers found.", delete_after=0)
-            await channeltosend.send(embeds=embedList)
-        print("============ END servers ============")
-    except Exception as e:
-        await ctx.respond("```Something went wrong. Please contact your discord admin.```")
-        print('\tError: ' + str(e))
+    if (CraxData.status_code == 0):
+        CraxData = CraxData.result
+
+        try:
+            CraxData['Servers']
+            if CraxData['Servers']['noServers'] == 'True':
+                await ctx.respond("```There are no servers being hosted by Crax at this moment. Please check again later.```")
+            else:
+                embedList = []
+                # embed = discord.Embed(title = "**List of Servers**", description = "Here are the list of servers managed by Crax.", color = discord.Color.green())
+                for game in CraxData['Servers']:
+                    if (type(CraxData['Servers'][game]) == dict):
+                        for server in CraxData['Servers'][game]:
+                            if (type(CraxData['Servers'][game][server]) == dict):
+                                embed = discord.Embed(title = "", description = "", color = discord.Color.green())
+                                embed.add_field(name = "**Game:** " + str(CraxData['Servers'][game][server]['game']), value = "", inline = False)
+                                embed.add_field(name = "**Server Name:** " + str(CraxData['Servers'][game][server]['servername']), value = "", inline = False)
+                                embed.add_field(name = "**IP & Port:** " + str(CraxData['Servers'][game][server]['ip']) + ":" + str(CraxData['Servers'][game][server]['port']), value = "", inline = False)
+                                if (CraxData['Servers'][game][server]['password'] != ''):
+                                    embed.add_field(name = "**Password:** " + str(CraxData['Servers'][game][server]['password']), value = "", inline = False)
+                                if (CraxData['Servers'][game][server]['note'] != ''):
+                                    embed.add_field(name = "**Notes:** ", value = str(CraxData['Servers'][game][server]['note']), inline = False)
+                                embedList.append(embed)
+                print('EmbedList: ' + str(embedList))
+                await ctx.respond("Crax servers found.", delete_after=0)
+                await channeltosend.send(embeds=embedList)
+            print("============ END servers ============")
+        except Exception as e:
+            await ctx.respond("```Something went wrong. Please contact your discord admin.```")
+            print('\tError: ' + str(e))
+            print("========================== END servers ==========================")
+    else:
+        await ctx.respond("```Failed to load server informations. Please contact your discord admin.```")
         print("========================== END servers ==========================")
 
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
@@ -695,7 +736,7 @@ async def embed(ctx):
                 print('Posted image: ' + str(x))
 
                 # move local file to another folder
-                os.rename(FilePath, os.path.join(SArchivedPath,x))
+                # os.rename(FilePath, os.path.join(SArchivedPath,x))
             except Exception as e:
                 print('Error: ' + str(e))
     
