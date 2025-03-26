@@ -536,7 +536,7 @@ SArchivedPath       = os.path.join(ScreenshotsPath,"Archived")      # path to Sc
 CachedMangaFile     = os.path.join(TempPath,".mangaList")           # file
 CachedMovieFile     = os.path.join(TempPath,".movieList")           # file
 CraxDataFile        = os.path.join(TempPath,"craxbot_data.json")    # file
-CraxDataFileMod     = os.path.join(TempPath,"craxbot_dataNEW.json")    # file
+CraxDataFileMod     = os.path.join(TempPath,"craxbot_dataNEW.json") # file
 
 # OnCrax Channel IDs
 chan_announ             = 1040696808797650974   #announcements channel
@@ -983,8 +983,8 @@ async def called_every_min():
     if CurrentTime.hour == CraxData['test']['Hour'] and CurrentTime.minute == 0 and CraxData['test']['Enable']: # Test
         message_channel = bot.get_channel(chan_tests)
         embed = discord.Embed(title='', description='')
-        embed.set_image(url=CraxData['fathersday']['Image'])
-        await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
+        embed.set_image(url=CraxData['test']['Image'])
+        await message_channel.send(CraxData['test']['Message'], embed=embed)
 
 print()
 @called_every_min.before_loop
