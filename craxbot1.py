@@ -477,48 +477,11 @@ def Load_CraxData(_FilePath):
         CraxData_['fathersday']['Day']   = fathersday['Day']
         print('\tUpdated the days of thanks giving, mothers day, and fathers day holidays.')
 
-        if (CraxData_['test']['Enable']):
-
-            print()
-            print('\t========================    Thanksgiving      ========================')
-            print(f'\tHoliday: '  + str(CraxData_['thanksgiving']['Holiday']))
-            print(f'\tHour: '     + str(CraxData_['thanksgiving']['Hour']))
-            print(f'\tDay: '      + str(CraxData_['thanksgiving']['Day']))
-            print(f'\tMonth: '    + str(CraxData_['thanksgiving']['Month']))
-            # print(f'Image: '    + str(holidays['thanksgiving']['Image']))
-            # print(f'Msg: \n'    + str(holidays['thanksgiving']['Message']))
-            print('\t========================    Mothers Day       ========================')
-            print(f'\tHoliday: '  + str(CraxData_['mothersday']['Holiday']))
-            print(f'\tHour: '     + str(CraxData_['mothersday']['Hour']))
-            print(f'\tDay: '      + str(CraxData_['mothersday']['Day']))
-            print(f'\tMonth: '    + str(CraxData_['mothersday']['Month']))
-            print('\t========================     Fathers Day      ========================')
-            print(f'\tHoliday: '  + str(CraxData_['fathersday']['Holiday']))
-            print(f'\tHour: '     + str(CraxData_['fathersday']['Hour']))
-            print(f'\tDay: '      + str(CraxData_['fathersday']['Day']))
-            print(f'\tMonth: '    + str(CraxData_['fathersday']['Month']))
-            print('\t======================== Screenshots Schedule ========================')
-            print('\tDays - Hours are in 24h format')
-            print('\t\t[0] Mondays  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['0'])))
-            print('\t\t[1] Tuesday  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['1'])))
-            print('\t\t[2] Wednesday: ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['2'])))
-            print('\t\t[3] Thursday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['3'])))
-            print('\t\t[4] Friday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['4'])))
-            print('\t\t[5] Saturday : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['5'])))
-            print('\t\t[6] Sunday   : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours']['6'])))
-
-            print()
-            # generate random times for screenshots to be posted
-            if (CraxData_['Screenshots']['RandomHours']):
-                CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())] = random.sample(range(0,23),CraxData_['Screenshots']['NumberOfHours'])
-                print('\t\tRandom hours?    ' + str(CraxData_['Screenshots']['RandomHours']))
-                print('\t\tNumber of Hours: ' + str(CraxData_['Screenshots']['NumberOfHours']))
-            
-            print()
-            print('\t\tCurrent day      : ' + str(datetime.datetime.today().weekday()) + ' | Data type: ' + str(type(datetime.datetime.today().weekday())))
-            print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())])) + ' | Element Data type:' + str(type(CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())][0])))
-            print('\t\tScheduled Mins   : ' + ', '.join(map(str,CraxData_['Screenshots']['Minutes'])) + ' | Element Data type:' + str(type(CraxData_['Screenshots']['Minutes'][0])))
-            print('\t======================================================================')
+        # generate random times for screenshots to be posted
+        if (CraxData_['Screenshots']['RandomHours']):
+            CraxData_['Screenshots']['Hours'][str(datetime.datetime.today().weekday())] = random.sample(range(1,24),CraxData_['Screenshots']['NumberOfHours'])
+            print('\t\tRandom hours?    ' + str(CraxData_['Screenshots']['RandomHours']))
+            print('\t\tNumber of Hours: ' + str(CraxData_['Screenshots']['NumberOfHours']))
     else:
         return Set_Return(999,'Error',CraxData_.reason)
     return Set_Return(0,CraxData_,'ok')
@@ -572,8 +535,39 @@ if (CraxData.status_code == 0):
     # Update craxdata
     # Export_Dict(CraxData,CraxDataFileMod)
 
-    # generate random times for screenshots to be called/posted
-    CraxData['Screenshots']
+    print()
+    print('\t========================    Thanksgiving      ========================')
+    print(f'\tHoliday: '  + str(CraxData['thanksgiving']['Holiday']))
+    print(f'\tHour: '     + str(CraxData['thanksgiving']['Hour']))
+    print(f'\tDay: '      + str(CraxData['thanksgiving']['Day']))
+    print(f'\tMonth: '    + str(CraxData['thanksgiving']['Month']))
+    # print(f'Image: '    + str(holidays['thanksgiving']['Image']))
+    # print(f'Msg: \n'    + str(holidays['thanksgiving']['Message']))
+    print('\t========================    Mothers Day       ========================')
+    print(f'\tHoliday: '  + str(CraxData['mothersday']['Holiday']))
+    print(f'\tHour: '     + str(CraxData['mothersday']['Hour']))
+    print(f'\tDay: '      + str(CraxData['mothersday']['Day']))
+    print(f'\tMonth: '    + str(CraxData['mothersday']['Month']))
+    print('\t========================     Fathers Day      ========================')
+    print(f'\tHoliday: '  + str(CraxData['fathersday']['Holiday']))
+    print(f'\tHour: '     + str(CraxData['fathersday']['Hour']))
+    print(f'\tDay: '      + str(CraxData['fathersday']['Day']))
+    print(f'\tMonth: '    + str(CraxData['fathersday']['Month']))
+    print('\t======================== Screenshots Schedule ========================')
+    print('\tDays - Hours are in 24h format')
+    print('\t\t[0] Mondays  : ' + ', '.join(map(str,CraxData['Screenshots']['Hours']['0'])))
+    print('\t\t[1] Tuesday  : ' + ', '.join(map(str,CraxData['Screenshots']['Hours']['1'])))
+    print('\t\t[2] Wednesday: ' + ', '.join(map(str,CraxData['Screenshots']['Hours']['2'])))
+    print('\t\t[3] Thursday : ' + ', '.join(map(str,CraxData['Screenshots']['Hours']['3'])))
+    print('\t\t[4] Friday   : ' + ', '.join(map(str,CraxData['Screenshots']['Hours']['4'])))
+    print('\t\t[5] Saturday : ' + ', '.join(map(str,CraxData['Screenshots']['Hours']['5'])))
+    print('\t\t[6] Sunday   : ' + ', '.join(map(str,CraxData['Screenshots']['Hours']['6'])))
+    
+    print()
+    print('\t\tCurrent day      : ' + str(datetime.datetime.today().weekday()) + ' | Data type: ' + str(type(datetime.datetime.today().weekday())))
+    print('\t\tScheduled Hours  : ' + ', '.join(map(str,CraxData['Screenshots']['Hours'][str(datetime.datetime.today().weekday())])) + ' | Element Data type:' + str(type(CraxData['Screenshots']['Hours'][str(datetime.datetime.today().weekday())][0])))
+    print('\t\tScheduled Mins   : ' + ', '.join(map(str,CraxData['Screenshots']['Minutes'])) + ' | Element Data type:' + str(type(CraxData['Screenshots']['Minutes'][0])))
+    print('\t======================================================================')
 else:
     print('\tError: ' + CraxData.reason)
     asyncio.sleep(30)
@@ -922,8 +916,11 @@ async def called_every_min():
             embed_ = Create_MovieEmbed(cMovie)
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
-
-    if CurrentTime.hour in (CraxData['Screenshots']['Hours'][str(CurrentDay.weekday())]) and CurrentTime.minute  in (CraxData['Screenshots']['Minutes']):         # post random screenshot
+    
+    print()
+    print(f'Curent Hour: {CurrentTime.hour} | Type: {type(CurrentTime.hour)}')
+    print('Screenshot Hours: ' + ', '.join(map(str,CraxData['Screenshots']['Hours'][str(CurrentDay.weekday())])))
+    if CurrentTime.hour in (CraxData['Screenshots']['Hours'][str(CurrentDay.weekday())]) and CurrentTime.minute in (CraxData['Screenshots']['Minutes']):         # post random screenshot
         print()
         print('Time for sreenshots! ' + str(CurrentTime))
         message_channel = bot.get_channel(chan_clipshighlights)
