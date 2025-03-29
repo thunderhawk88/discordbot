@@ -658,41 +658,35 @@ async def embed(ctx):
     print('Target Channel: ' + str(channeltosend))
 
     # re-import holidays from a file
-    CraxData = Import_Json(CraxDataFile)
+    # CraxData = Import_Json(CraxDataFile)
 
-    if (CraxData.status_code == 0):
-        CraxData = CraxData.result
-
-        try:
-            CraxData['Servers']
-            if CraxData['Servers']['noServers']:
-                await ctx.respond("```There are no servers being hosted by Crax at this moment. Please check again later.```")
-            else:
-                embedList = []
-                # embed = discord.Embed(title = "**List of Servers**", description = "Here are the list of servers managed by Crax.", color = discord.Color.green())
-                for game in CraxData['Servers']:
-                    if (type(CraxData['Servers'][game]) == dict):
-                        for server in CraxData['Servers'][game]:
-                            if (type(CraxData['Servers'][game][server]) == dict):
-                                embed = discord.Embed(title = "", description = "", color = discord.Color.green())
-                                embed.add_field(name = "**Game:** " + str(CraxData['Servers'][game][server]['game']), value = "", inline = False)
-                                embed.add_field(name = "**Server Name:** " + str(CraxData['Servers'][game][server]['servername']), value = "", inline = False)
-                                embed.add_field(name = "**IP & Port:** " + str(CraxData['Servers'][game][server]['ip']) + ":" + str(CraxData['Servers'][game][server]['port']), value = "", inline = False)
-                                if (CraxData['Servers'][game][server]['password'] != ''):
-                                    embed.add_field(name = "**Password:** " + str(CraxData['Servers'][game][server]['password']), value = "", inline = False)
-                                if (CraxData['Servers'][game][server]['note'] != ''):
-                                    embed.add_field(name = "**Notes:** ", value = str(CraxData['Servers'][game][server]['note']), inline = False)
-                                embedList.append(embed)
-                print('EmbedList: ' + str(embedList))
-                await ctx.respond("Crax servers found.", delete_after=0)
-                await channeltosend.send(embeds=embedList)
-            print("============ END servers ============")
-        except Exception as e:
-            await ctx.respond("```Something went wrong. Please contact your discord admin.```")
-            print('\tError: ' + str(e))
-            print("========================== END servers ==========================")
-    else:
-        await ctx.respond("```Failed to load server informations. Please contact your discord admin.```")
+    try:
+        CraxData['Servers']
+        if CraxData['Servers']['noServers']:
+            await ctx.respond("```There are no servers being hosted by Crax at this moment. Please check again later.```")
+        else:
+            embedList = []
+            # embed = discord.Embed(title = "**List of Servers**", description = "Here are the list of servers managed by Crax.", color = discord.Color.green())
+            for game in CraxData['Servers']:
+                if (type(CraxData['Servers'][game]) == dict):
+                    for server in CraxData['Servers'][game]:
+                        if (type(CraxData['Servers'][game][server]) == dict):
+                            embed = discord.Embed(title = "", description = "", color = discord.Color.green())
+                            embed.add_field(name = "**Game:** " + str(CraxData['Servers'][game][server]['game']), value = "", inline = False)
+                            embed.add_field(name = "**Server Name:** " + str(CraxData['Servers'][game][server]['servername']), value = "", inline = False)
+                            embed.add_field(name = "**IP & Port:** " + str(CraxData['Servers'][game][server]['ip']) + ":" + str(CraxData['Servers'][game][server]['port']), value = "", inline = False)
+                            if (CraxData['Servers'][game][server]['password'] != ''):
+                                embed.add_field(name = "**Password:** " + str(CraxData['Servers'][game][server]['password']), value = "", inline = False)
+                            if (CraxData['Servers'][game][server]['note'] != ''):
+                                embed.add_field(name = "**Notes:** ", value = str(CraxData['Servers'][game][server]['note']), inline = False)
+                            embedList.append(embed)
+            print('EmbedList: ' + str(embedList))
+            await ctx.respond("Crax servers found.", delete_after=0)
+            await channeltosend.send(embeds=embedList)
+        print("============ END servers ============")
+    except Exception as e:
+        await ctx.respond("```Something went wrong. Please contact your discord admin.```")
+        print('\tError: ' + str(e))
         print("========================== END servers ==========================")
 
 @bot.slash_command(name='adminmanga', description="Force post new recommended manga in a channel.")
