@@ -1,221 +1,156 @@
-# This scripts scans a manga website then pick a manga in descending order.
-# So if the manga website is ranking hottest manga, this script will start with #1 down.
-# The outputs are json file and a text file.
-# JSON file contains one manga title with all details such as description, # of reads, and the mange poster/image.
-# text file is named ".mangalist". It lists all the manga title that has been selected in the past. This way the script wont recommend the same manga everytime. Unless the ranking changed.
+[CmdletBinding()]
 param(
-    [switch]$DebugMode
+    [Parameter(Mandatory=$false,Position=0,HelpMessage="Normal: Logs any errors during runtime. Otherwuse, None")]
+    [ValidateSet('None', 'Normal')]
+	[string]$LogLevel = 'Normal',
+    [Parameter(Mandatory=$false,Position=1,HelpMessage="Text file listing Manga titles")]
+    [string]$CacheSource = '.\temps\.mangaList',
+    [Parameter(Mandatory=$false,Position=2,HelpMessage="Debug mode")]
+    [Switch]$DebugMode
 )
 
-Function get-str {
-    param(
-        $String,
-        $Pattern
+Function LogEntry {
+    Param(
+        [ValidateSet('Information', 'Error', 'Debug')]
+        $Category = 'Information',
+        $Message
     )
 
-    $private:result = @()
-	$result = $String | Select-String -Pattern $Pattern
-    $result.Matches[0].Value
+    If ($LogLevel -eq 'None') {
+        Return
+    }
+
+    $private:myLogEntry = [PSCustomObject]@{
+        DateTime = (Get-Date).ToString()
+        Category = $Category
+        Message  = $Message
+    }
+
+    Write-Host $Message -ForegroundColor Cyan
+    Export-Csv -Path $LogFile -InputObject $myLogEntry -NoTypeInformation -Append
 }
-Function getpage {
+
+Function Get-RawHTML {
     param(
-        $Page = 1
+        [Parameter(Mandatory=$true,Position=0,HelpMessage="Website URL")]
+        [string]$URL
     )
 
-    [string]$private:htmlFile = Join-Path $tempPath "scraped_html.html"
-    
-    [string]$private:URL = "https://mangakakalot.com/manga_list?type=topview&category=all&state=all&page=$Page"
-    [string]$privatE:initConditionLine = "<a href=`"https://mangakakalot.com/manga_list?type=Topview&category=all&state=all&page=1`">Hot manga</a>"
-    [string]$privatE:line = '<a rel="nofollow" href='
-    [string]$privatE:lineExclude = 'class="list'
-    [string]$private:titlePattern = '(?<=title\=").+?(?=">)'
-    [string]$private:linkPattern = '(?<=href=").+?(?=" title)'
-    [string]$private:descLine = 'title>More.</a>'
-    [string]$private:asciiPattern = '(?<=&).+?(?=;)'
-    [string]$private:linePattern = '(?<=<a).+?(?=</a>)'
-    [string]$private:imgLine = '<img src="'
-    [string]$private:imgPattern = '(?<=<img src=").+?(?=" onerror)'
-    [string]$private:readsLine = '<span class="aye_icon">'
-    [string]$private:readsPattern = '(?<=class="aye_icon">).+?(?=</span>)'
-
-    $private:getPage = $null
-    [int32]$private:getPageCode = $null
-    [string]$private:getTitle = $null
-    [string]$private:getDesc = $null
-    [string]$private:getReads = $null
-    [string]$private:getLink = $null
-    [string]$private:getImg = $null
-    [bool]$private:initCondition = $false
-    [bool]$private:foundIt = $false
-    [bool]$breakLoop = $false
-    [bool]$mangaListCheck = $false
-
-    $private:returnthis = [PSCustomObject]@{
-        title = $null;
-        desc = $null;
-        reads = $null;
-        link = $null;
-        image = $null;
-    }
-    $private:Ptags = [PSCustomObject]@{
-        Content = $null
-        Start = 0
-        End = 0
-    }
-
-    if (-not (Test-Path -Path $tempPath)) {mkdir $tempPath}
+    $private:HTMLPage = $null
 
     try {
-        $getPage = Invoke-WebRequest -URI $url -ErrorAction Stop
-    } catch {}
-	
-	$getPageCode = [int]$getPage.StatusCode
-	
-    if ($getPageCode -eq 200) {
-        $lineNum = 0
-        # Write to file
-        $getPage.RawContent | Out-File -Encoding 'utf8' $htmlFile
-        Get-Content $htmlFile |
-        ForEach-Object {
-            $lineNum++
-            if ($_ -like "$imgLine*") {
-                $getImg = get-str $_ $imgPattern
-            }
-
-            # check for tag <p> for description
-            if (-not($breakLoop)) {
-                if ($DebugMode) {Write-Host "`nLine $lineNum"}
-                if ((($PTags.Start -EQ 0) -AND ($PTags.End -EQ 0)) -OR (($PTags.Start -EQ 1) -AND ($PTags.End -EQ 0))) {
-                    $PTags.Start = $PTags.Start + ([regex]::Matches($_, "<p>")).Count
-                    $PTags.End = $PTags.End + ([regex]::Matches($_, "</p>")).Count
-                    if ($DebugMode) {Write-Host "`tPtags: $($PTags.Start) | $($PTags.End)" -ForegroundColor Green}
-                } elseif ($PTags.Start -GE $PTags.End) {
-                    $PTags.Start = 0
-                    $PTags.End = 0
-                }
-                # record all string if Ptag.Start is 1
-                if ($PTags.Start -EQ 1) {
-                    $PTags.Content = $Ptags.Content + ($_ -replace "<p>","" -replace "'","") + " "
-                } else {
-                    $PTags.Content = $null
-                }
-                
-                if ($DebugMode) {Write-Host "`tPtags: $($PTags.Start) | $($PTags.End)`n`tPContent: $($PTags.Content)"}
-            }
-
-            if (($_ -like "$line*") -AND (-not $foundIt) -AND ($initCondition) -AND (-not $breakLoop)) {
-                $getLink = get-str $_ $linkPattern
-                $getTitle = get-str $_ $titlePattern
-                if (-not ($getTitle -match $lineExclude)) {
-                    if ($mangaListCached) {$mangaListCheck = $mangaListCached.Contains($getTitle)}
-                    if (-not ($mangaListCheck)) {
-                        $foundIt = $true
-                        # Write-Host "Title: $_"
-                        $returnthis.title = $getTitle
-                        $returnthis.link = $getLink
-                        $returnthis.image = $getImg
-                    }
-                }
-            } elseif (($foundIt) -AND ($_ -like "$readsline*") -AND (-not $breakLoop)) {
-                $getReads = $(get-str $_ $readsPattern)
-                $returnthis.reads = [int32]$getReads
-            } elseif (($foundIt) -AND ($_ -match $descLine) -AND (-not $breakLoop)) {
-
-                $getDesc = $PTags.Content
-                $getDesc = $getDesc.Substring(0,$getDesc.IndexOf('<'))
-                if  ($DebugMode) {Write-Host "`n1. Desc: $getDesc" -ForegroundColor Magenta}
-                
-                # $getDesc = $_ -Replace "($asciiPattern)" , ''
-                if  ($DebugMode) {Write-Host "`n2. Desc: $getDesc" -ForegroundColor Magenta}
-                
-                $getDesc = $getDesc -Replace "&rsquo;","'" -Replace "&#39;","'" -Replace "&rdquo;",""
-                if  ($DebugMode) {Write-Host "`n3. Desc: $getDesc" -ForegroundColor Magenta}
-                
-                $getDesc = $getDesc -Replace "(($linePattern))" , ''
-                if  ($DebugMode) {Write-Host "`n4. Desc: $getDesc" -ForegroundColor Magenta}
-                
-                $getDesc = $getDesc.Replace("<a</a>",'')
-                if  ($DebugMode) {Write-Host "`n5. Desc: $getDesc" -ForegroundColor Magenta}
-
-                $getDesc = $getDesc.trim() + "..."
-                $returnthis.desc = $getDesc
-                $breakLoop = $true
-                # reset ptags since a description has been found
-                $PTags.Start = 0
-                $PTags.End = 0
-            }
-
-            if (($_ -EQ $initConditionLine) -AND (-not $initCondition)) {
-                $initCondition = $true
-            }
-        }
-        # Remove-Item $htmlFile -Force
-        if ($returnthis.title -AND $returnthis.link -AND $returnthis.image) {
-            if ($DebugMode) {
-                Write-Host
-                Write-Host "Manga Details before function return:"
-                Write-Host "Manga Title: $($returnthis.title)" -ForegroundColor Yellow
-                Write-Host "Description: $($returnthis.desc)" -ForegroundColor Yellow
-                Write-Host "Manga Image: $($returnthis.image)" -ForegroundColor Yellow
-                Write-Host "Manga Link: $($returnthis.link)" -ForegroundColor Yellow
-            }
-            return $returnthis
-        } else {
-            return $false
-        }
-    } else {
+        $HTMLPage = Invoke-WebRequest -URI $url -ErrorAction Stop
+        return $HTMLPage
+    } catch {
+        LogEntry -Message "Unabled to send web request to `"$URL`": $($Error[0])" -Category 'Error'
         return $false
     }
 }
 
-[string]$GLOBAL:current_dir = $(Get-Location | ForEach {$_.Path})
-[string]$GLOBAL:tempPath = Join-Path $current_dir "temps"
-[string]$GLOBAL:mangaListFile = Join-Path $tempPath ".mangaList"
-[string]$GLOBAL:mangaRecommended = Join-Path $tempPath "manga.json"
+Function Get-ItemDetails {
+    param(
+        [Parameter(Mandatory=$true,Position=0,HelpMessage="Array of objects containing the mangas,")]
+        $Source
+    )
 
-$Global:mangaListCached = @()
+    $private:Mangas = @()
+    $private:Temp = $null
+
+    # Patterns
+    [string]$private:ImagePattern = '(?<= src=").+?(?=" width)'                          # get all strings between " src="" and "">"
+    [string]$private:LinkPattern1  = '(?<=<H3><A title=").+?(?=">)'                      # get all strings between "<H3><A title="" and "" rel="
+    [string]$private:LinkPattern2  = '(?<=<A class=read-more href=").+?(?=">)'                   # get all strings between "<H3><A title=" and "" rel="
+    [string]$private:LinkCleanUp  = '(.*).+?(?=http)'                                    # remove any strings before "http"
+    # [string]$private:ReadsPattern = '(?<=<SPAN class=aye_icon>).+?(?=</SPAN> </DIV>)'
+
+    foreach ($item in $Source) {
+        $Mangas += [PSCustomObject]@{
+            Title = ($item.innerText -split '\n')[1].Trim()
+            Description = ($item.innerText -split '\n')[7].Trim() -Replace " More.","..."
+            Image = ([regex]::Matches($item.innerHTML,$ImagePattern)).Value
+            # Reads = [int]([regex]::Matches($item.innerHTML,$ReadsPattern)).Value
+            Reads = [int]($item.innerText -split '\n')[3].Trim()
+            Link  = $(
+                        $Temp = ([regex]::Matches($item.innerHTML,$LinkPattern1)).Value
+                        if (-not($Temp)) {$Temp = ([regex]::Matches($item.innerHTML,$LinkPattern2)).Value}
+                        $Temp -Replace $LinkCleanUp
+                    )
+        }
+        Write-Host $(([regex]::Matches($item.innerHTML,$LinkPattern1)).Value) -ForegroundColor Cyan
+    }
+    return $Mangas
+}
+
+# Directories
+[string]$CurrentPath = $(Get-Location | ForEach {$_.Path})
+[string]$LogPath = Join-Path $CurrentPath "Logs"
+[string]$TempPath = Join-Path $CurrentPath "temps"
+[string]$LogFile = Join-Path $LogPath "Get-ItemDetails.log"
+[string]$MangaRecommended = Join-Path $tempPath "manga.json"
+[string]$MangaListFile = Join-Path $tempPath ".mangaList"
+
+$ErrorActionPreference = 'Stop'
+$CacheItems = $(if (Test-Path -Path $CacheSource) {Get-Content -Path $CacheSource} else {@()})
+$HTMLPage = $null
+$ElementDIV = $null
+$MangaItems = $null
 [int]$MaxTitleinPage = 24
 [int]$TargetPage = 1
 
+# get the website page based on cacheditems
+$TargetPage = [math]::Floor($CacheItems.Count / $MaxTitleinPage) + 1
+
+# Website url
+# $URL = "https://mangakakalot.com/manga_list?type=topview&category=all&state=all&page=$TargetPage" # old website
+
+if ($TargetPage -EQ 1) {
+    $URL = "https://www.mangakakalot.gg/manga-list/hot-manga"
+} else {
+    $URL = "https://www.mangakakalot.gg/manga-list/hot-manga?page=$TargetPage"
+}
+
+if ($DebugMode) {Write-Host "Target Page: $URL" -ForegroundColor Cyan}
+
+# Do webrequest to get raw html
+$HTMLPage = Get-RawHTML -URL $URL
+
+# check if webrequest was successfull. Exit otherwise
+if (-not($HTMLPage)) {
+    if ($DebugMode) {Write-Host "Error: $($LastError)" -ForegroundColor Red}
+    exit 503
+}
+
+$ElementDIV = $HTMLPage.AllElements | Where-Object {$_.tagName -EQ 'div'}
+$MangaItems = $ElementDIV | Where-Object {$_.class -EQ "list-truyen-item-wrap"}
+
 if ($DebugMode) {
     Write-Host
-    Write-Host "Current Dir:                      : $current_dir"
-    Write-Host "Temp Dir:                         : $tempPath"
-    Write-Host "Manga Title list file:            : $mangaListFile"
-    Write-Host "Manga JSON file                   : $mangaRecommended"
-    Write-Host "Max number of Titles in Manga site: $MaxTitleinPage"
-    Write-Host "Initial Target Page               : $TargetPage"
+    Write-Host "Number of Items: $($MangaItems.Count)" -ForegroundColor Cyan
+    Write-Host "Target Page: $TargetPage" -ForegroundColor Cyan
 }
 
-if (Test-Path -Path $mangaListFile) {
-    $mangaListCached = Get-Content $mangaListFile
-    $TargetPage = [math]::Floor($mangaListCached.Count / $MaxTitleinPage) + 1
-    # if ($TargetPage -LT 1) {$TargetPage = 1}
+$Mangas = Get-ItemDetails -Source $MangaItems
 
+# Select a manga
+foreach ($Manga in $Mangas) {
     if ($DebugMode) {
         Write-Host
-        Write-Host "Cached Manga Count: $($mangaListCached.Count)" -ForegroundColor Cyan
-        Write-Host "Target Page       : $TargetPage" -ForegroundColor Cyan
+        Write-Host "Manga Title : $($Manga.Title)" -ForegroundColor Yellow
+        Write-Host "Description : $($Manga.Description)" -ForegroundColor Cyan
+        Write-Host "Manga Image : $($Manga.Image)" -ForegroundColor Cyan
+        Write-Host "Manga Link  : $($Manga.Link)" -ForegroundColor Cyan
+        Write-Host "Manga Reads : $($Manga.Reads)" -ForegroundColor Cyan
     }
 
-    $result = getpage -Page $TargetPage
-} else {
-    if ($DebugMode) {
-        Write-Host
-        Write-Host "No cached mangas found." -ForegroundColor Cyan
+    if ($Manga.Title -NOTIN $CacheItems) {
+        $Manga | ConvertTo-Json | Out-File -Encoding utf8 -FilePath $MangaRecommended   # export a json of selected manga. Other program then can use the json.
+        $Manga.title | Out-File -FilePath $MangaListFile -Encoding utf8 -Append         # Add manga title to a text file to keep track of already selected mangas
+        if ($DebugMode) {
+            Write-Host
+            Write-Host "RECOMMENDED MANGA: $($Manga.Title)" -ForegroundColor Green
+        }
+        break
     }
-    $result = getpage
 }
 
-if ($result) {
-    if ($DebugMode) {
-        Write-Host
-        Write-Host "Manga Title: $($result.title)" -ForegroundColor Cyan
-        Write-Host "Description: $($result.desc)" -ForegroundColor Cyan
-        Write-Host "Manga Image: $($result.image)" -ForegroundColor Cyan
-        Write-Host "Manga Link: $($result.link)" -ForegroundColor Cyan
-    }
-
-    $result | ConvertTo-Json | Out-File -Encoding utf8 -FilePath $mangaRecommended
-    $result.title | Out-File -FilePath $mangaListFile -Encoding utf8 -Append
-}
+exit 0
