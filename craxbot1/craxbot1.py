@@ -447,12 +447,12 @@ def Get_Screenshot(_Path,_Count):
         SelectedFiles_ = DirFiles_          # just get all files inside directory  
     return SelectedFiles_
 
-def Load_CraxData(_FilePath):
+def Load_CraxData(_FilePath,_Report = False):
     # set variables
-    CraxData_       = None
-    thanksgiving    = None
-    mothersday      = None
-    fathersday      = None
+    CraxData_           = None
+    thanksgiving        = None
+    mothersday          = None
+    fathersday          = None
 
     # import holidays from a file
     CraxData_ = Import_Json(_FilePath)
@@ -485,6 +485,29 @@ def Load_CraxData(_FilePath):
     else:
         return Set_Return(999,'Error',CraxData_.reason)
     return Set_Return(0,CraxData_,'ok')
+
+def Create_EmbedHolidays(_Data):
+    Date_       = None
+    Year_       = datetime.datetime.now().year
+    EmbedList_  = []
+
+    for key in _Data:
+        if 'Holiday' in _Data[key]:
+            try:
+                Date_               = datetime.date(Year_, _Data[key]['Month'], _Data[key]['Day'])
+                # create embed
+                embed_              = discord.Embed()
+                embed_.title        = "**" + _Data[key]['Holiday'] + "**"
+                embed_.color        = discord.Color.blue()
+                # embed_.timestamp    = datetime.datetime.now()
+                # embed_.set_author(name="Craxbot01")
+                embed_.add_field(name = "Date: ", value = Date_.strftime("%B %d, %Y"), inline=True)
+                EmbedList_.append(embed_)
+            except Exception as e:
+                print(f'\tError creating embed: {e}')
+            except BaseException as e:
+                print(f'\tError creating embed: {e}')
+    return EmbedList_
 
 def restart_bot(): 
   os.execv(sys.executable, ['python'] + sys.argv)
@@ -532,8 +555,13 @@ CraxData = Load_CraxData(CraxDataFile)
 
 if (CraxData.status_code == 0):
     CraxData = CraxData.result
+
     # Update craxdata
     # Export_Dict(CraxData,CraxDataFileMod)
+
+    print()
+    _embedList  = []
+    _embedList  = Create_EmbedHolidays(CraxData)
 
     print()
     print('\t========================    Thanksgiving      ========================')
@@ -981,6 +1009,21 @@ print()
 @called_every_min.before_loop
 async def before():
     await bot.wait_until_ready()
+
+    # send embedded holiday dates to discord
+    if (len(_embedList) > 0):
+        print(f'Found {len(_embedList)} holiday embeds.')
+        try:
+            channel = bot.get_channel(chan_tests)
+            for x in _embedList:
+                await channel.send(embed = x)
+            channel     = None
+        except Exception as e:
+            print('Error sending embedded holiday dates: ', str(e))
+        except BaseException as e:
+            print('Error sending embedded holiday dates: ', str(e))
+
+    print()
     print("Scheduled Tasks started!")
 
 called_every_min.start()
