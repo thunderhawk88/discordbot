@@ -1,0 +1,93 @@
+﻿{
+	"Token": "TOKEN",
+	"imdbToken": "TOKEN",
+	"test": {
+		"Holiday":  "Test Holiday",
+		"Enable": true,
+		"Hour":  0,
+		"Day":  27,
+		"Month":  11,
+		"Image":  "https://res.cloudinary.com/display97/image/upload/q_auto,fl_lossy,f_auto/v1362515922/-158162.jpg",
+		"Message": "This is a test\n\n..."
+	},
+	"thanksgiving": {
+		"Holiday":  "Thanks Giving",
+		"Hour":  6,
+		"Day":  27,
+		"Month":  11,
+		"Image":  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTg2Nno4amtrOWJvNmZiMTdmNDN0MWE2aW5md2tjaWEzc2Q2ZTJsaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eEvFNz3gQINb48uGiX/giphy.gif",
+		"Message": "@everyone\n\nMay the turkey leg be yours this Thanksgiving\n\n..."
+	},
+	"christmas": {
+		"Holiday":  "Christmas",
+		"Hour":  0,
+		"Day":  25,
+		"Month":  12,
+		"Image":  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHd5b3ZsM2M0aHRqc2Q3Zzd1ZHIwa3V0bGN4YTAxNTYwOGdsaDVvdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/rfGsCEbD2oI3or07dW/giphy.gif",
+		"Message": "@everyone\n\nThey say the best Christmas gifts come from the heart … \nbut cash and gift cards do wonders too!\n\nHappy Holidays!..."
+	},
+	"newyear": {
+		"Holiday":  "New Year",
+		"Hour":  0,
+		"Day":  1,
+		"Month":  1,
+		"Image":  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXF5ODg3cnI0N2M1cjl3eGpxdnRiZWNybWN5cGh5YW53dnR2ZDMxdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/8It0HNrGjcTT2/giphy.gif",
+		"Message": "@everyone\n\nHappy New Year!\n\nI know that this past year has been full of challenges, and\nI pray that the coming year brings brighter days.\nSending all our love and good wishes.\n\n..."
+	},
+	"mothersday": {
+		"Holiday":  "Mothers Day",
+		"Hour":  0,
+		"Day":  11,
+		"Month":  5,
+		"Image":  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExajYwc3YzMHdhdXFybnB2bTVkeTNmOHhnNzlzNjQ4cWFpcXhqbjZ3cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/lpuwDcI8FXlomAsHkA/giphy.gif",
+		"Message": "@everyone\n\nHappy Mothers Day!\n\n..."
+	},
+	"fathersday": {
+		"Holiday":  "Fathers Day",
+		"Hour":  0,
+		"Day":  15,
+		"Month":  6,
+		"Image":  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDBmcnE1Z2F0OGU2cXVyaTd3cmF0cjZ6ODZpdjBsbGZsOTJva28xbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jmvk7erhaEyLfAMKZV/giphy.gif",
+		"Message": "@everyone\n\nHappy Fathers Day!\n\n..."
+	},
+	"Servers": {
+		"noServers": true,
+		"palworld": {
+			"1": {
+				"servername": "Laid Back Gaming",
+				"game": "Palworld",
+				"desc": "I wanna be the very best...like no one",
+				"ip": "51.81.221.162",
+				"port": 25565,
+				"password": "cr@x",
+				"note": ""
+			},
+			"2": {
+				"servername": "Laid Back Gaming",
+				"game": "Enshrouded",
+				"desc": "",
+				"ip": "51.81.221.162",
+				"port": 15637,
+				"password": "cr@x",
+				"note": "How to add server to Steam Favorites - https://enshrouded.zendesk.com/hc/en-us/articles/16454683440541-Favorite-Server-via-IP"
+			}
+		}
+	},
+	"Screenshots": {
+		"Hours": {
+			"0": [6,9,11,12,14,18,1],
+			"1": [14],
+			"2": [14],
+			"3": [14],
+			"4": [14],
+			"5": [6,10,14,18,20],
+			"6": [6,10,14,18,20]
+		},
+		"Minutes": [0],
+		"RandomHours": true,
+		"NumberOfHours": 4
+	},
+	"Owner": {
+		"ID": INTID
+	}
+}
