@@ -945,9 +945,9 @@ async def called_every_min():
             print("Posted new movie recommendation: " + str(cMovie['primaryTitle']))
         await message_channel.send(embed=embed_)
     
-    print()
-    print(f'Curent Hour: {CurrentTime.hour} | Type: {type(CurrentTime.hour)}')
-    print('Screenshot Hours: ' + ', '.join(map(str,CraxData['Screenshots']['Hours'][str(CurrentDay.weekday())])))
+    # print()
+    # print(f'Curent Hour: {CurrentTime.hour} | Type: {type(CurrentTime.hour)}')
+    # print('Screenshot Hours: ' + ', '.join(map(str,CraxData['Screenshots']['Hours'][str(CurrentDay.weekday())])))
     if CurrentTime.hour in (CraxData['Screenshots']['Hours'][str(CurrentDay.weekday())]) and CurrentTime.minute in (CraxData['Screenshots']['Minutes']):         # post random screenshot
         print()
         print('Time for sreenshots! ' + str(CurrentTime))
