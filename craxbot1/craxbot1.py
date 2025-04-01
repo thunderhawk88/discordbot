@@ -486,28 +486,34 @@ def Load_CraxData(_FilePath,_Report = False):
         return Set_Return(999,'Error',CraxData_.reason)
     return Set_Return(0,CraxData_,'ok')
 
-def Create_EmbedHolidays(_Data):
+def Add_StringFiller(_String,_MaxLength):
+    Outstring_  = None
+    StringLen_  = len(_String)
+
+    if StringLen_ < _MaxLength:
+        Outstring_ = _String + (' ' * (_MaxLength - StringLen_))
+    return Outstring_
+
+def Create_HolidayReport(_Data):
     Date_       = None
     Year_       = datetime.datetime.now().year
-    EmbedList_  = []
+    PostMsg_    = None
 
     for key in _Data:
         if 'Holiday' in _Data[key]:
             try:
                 Date_               = datetime.date(Year_, _Data[key]['Month'], _Data[key]['Day'])
-                # create embed
-                embed_              = discord.Embed()
-                embed_.title        = "**" + _Data[key]['Holiday'] + "**"
-                embed_.color        = discord.Color.blue()
-                # embed_.timestamp    = datetime.datetime.now()
-                # embed_.set_author(name="Craxbot01")
-                embed_.add_field(name = "Date: ", value = Date_.strftime("%B %d, %Y"), inline=True)
-                EmbedList_.append(embed_)
+
+                # create post strings
+                if (PostMsg_ != None):
+                    PostMsg_ = PostMsg_ + '\n' + Add_StringFiller(Date_.strftime("%B %d, %Y"),20) + ' | ' + _Data[key]['Holiday']
+                else:
+                    PostMsg_ = Add_StringFiller(Date_.strftime("%B %d, %Y"),20) + ' | ' + _Data[key]['Holiday']
             except Exception as e:
                 print(f'\tError creating embed: {e}')
             except BaseException as e:
                 print(f'\tError creating embed: {e}')
-    return EmbedList_
+    return PostMsg_
 
 def restart_bot(): 
   os.execv(sys.executable, ['python'] + sys.argv)
@@ -527,7 +533,7 @@ CraxDataFileMod     = os.path.join(TempPath,"craxbot_dataNEW.json") # file
 # OnCrax Channel IDs
 chan_announ             = 1040696808797650974   #announcements channel
 chan_gen                = 845072862397333506    #general in text channel
-chan_tests              = 1041382186793848922   #tests in text channel
+chan_tests              = 1356541658753269951   #tests in text channel
 chan_craxstats          = 1138670086861897738   #crax_stats channel
 chan_craxevents         = 1140037396151418951   #crax_events channel
 chan_craxservers        = 1124176437344211115   #crax_servers channel
@@ -560,8 +566,8 @@ if (CraxData.status_code == 0):
     # Export_Dict(CraxData,CraxDataFileMod)
 
     print()
-    _embedList  = []
-    _embedList  = Create_EmbedHolidays(CraxData)
+    HolidayReport  = None
+    HolidayReport  = Create_HolidayReport(CraxData)
 
     print()
     print('\t========================    Thanksgiving      ========================')
@@ -1011,12 +1017,11 @@ async def before():
     await bot.wait_until_ready()
 
     # send embedded holiday dates to discord
-    if (len(_embedList) > 0):
-        print(f'Found {len(_embedList)} holiday embeds.')
+    if (HolidayReport != None):
+        print(f'Found holiday report.')
         try:
             channel = bot.get_channel(chan_tests)
-            for x in _embedList:
-                await channel.send(embed = x)
+            await channel.send(f'```{HolidayReport}```')
             channel     = None
         except Exception as e:
             print('Error sending embedded holiday dates: ', str(e))
