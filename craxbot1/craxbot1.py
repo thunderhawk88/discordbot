@@ -1005,7 +1005,7 @@ async def called_every_min():
         embed.set_image(url=CraxData['fathersday']['Image'])
         await message_channel.send(CraxData['fathersday']['Message'], embed=embed)
 
-    if CurrentTime.hour == CraxData['test']['Hour'] and CurrentTime.minute == 0 and CraxData['test']['Enable']: # Test
+    if CurrentTime.day == CraxData['fathersday']['Day'] and CurrentTime.hour == CraxData['test']['Hour'] and CurrentTime.minute == 0 and CraxData['test']['Enable']: # Test
         message_channel = bot.get_channel(chan_tests)
         embed = discord.Embed(title='', description='')
         embed.set_image(url=CraxData['test']['Image'])
