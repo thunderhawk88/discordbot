@@ -22,37 +22,13 @@ finally:
 ########### START FUNCTIONS ###############
 
 class Set_Return():
-    def __init__(self, _status_code = 0, _result = None, _reason = None):
-        self._status_code = _status_code
-        self._result      = _result
-        self._reason      = _reason
+    def __init__(self, status_code = 0, result = None, reason = None):
+        self.status_code = status_code
+        self.result      = result
+        self.reason      = reason
 
     def __str__(self):
-        return "{\"status_code\":\"" + str(self._status_code) + "\", \"result\":\"" + str(self._result) + "\", \"reason\":\"" + str(self._reason) + "\"}"
-    
-    @property
-    def status_code(self):
-        return self._status_code
-    
-    @status_code.setter
-    def status_code(self, value):
-        self._status_code = value
-    
-    @property
-    def result(self):
-        return self._result
-    
-    @result.setter
-    def result(self, value):
-        self._result = value
-
-    @property
-    def reason(self):
-        return self._reason
-    
-    @reason.setter
-    def reason(self, value):
-        self._reason = value
+        return "{\"status_code\":\"" + str(self.status_code) + "\", \"result\":\"" + str(self.result) + "\", \"reason\":\"" + str(self.reason) + "\"}"
 
 def Check_Directory(_Path):
     if not os.path.exists(_Path):
@@ -70,24 +46,32 @@ def Check_Directory(_Path):
         print('\tFound: ' + _Path)
     return True
     
-def Import_Json(_File):
-    _result = None
+def Import_Json(file: pathlib.Path):
+    result = None
+    status_codes = {
+        FileNotFoundError: 999,
+        PermissionError: 999,
+        ValueError: 999,
+        IOError: 999
+    }
+    status_messages = {
+        FileNotFoundError: 'Error opening file. File not found: ',
+        PermissionError: 'You do not have permission to open the file! ',
+        ValueError: 'Invalid data format!',
+        IOError: 'An error occurred while writing to the file!'
+    }
 
-    if os.path.exists(_File):
+    if os.path.exists(file):
         try:
-            with open(_File, "r", encoding = "utf-8-sig") as sfile:
-                _result = json.load(sfile)
-            _result = Set_Return(0,_result,'ok')
-            print("\tLoaded successfully: " + str(_File))
-        except FileNotFoundError as e:
-            _result = Set_Return(999,"\tError",'Error opening file. File not found: ' + str(_File))
-        except PermissionError as e:
-            _result = Set_Return(999,"\tError",'You do not have permission to open the file! ' + str(_File))
-        except ValueError as e:
-            _result = Set_Return(999,"\tError",'Invalid data format!' + str(_File))
-        except IOError as e:
-            _result = Set_Return(999,"\tError",'An error occurred while writing to the file!' + str(_File))
-    return _result
+            with open(file, "r", encoding = "utf-8-sig") as sfile:
+                result = json.load(sfile)
+            print("\tLoaded successfully: " + str(file))
+            return Set_Return(0,result,'ok')
+        except tuple(status_codes.keys()) as e:
+            error_code = status_codes[type(e)]
+            error_message = status_messages[type(e)] + str(file)
+            print(f"\t{error_message} - {e}")
+            return Set_Return(error_code, None, error_message)
 
 def Export_Dict(_Dict,_File):
     _result = None
