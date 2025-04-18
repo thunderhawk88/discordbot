@@ -482,6 +482,7 @@ def Create_HolidayReport(_Data):
     Date_       = None
     Year_       = datetime.datetime.now().year
     PostMsg_    = None
+    CurrentDay  = datetime.datetime.today().weekday()
 
     for key in _Data:
         if 'Holiday' in _Data[key]:
@@ -493,6 +494,17 @@ def Create_HolidayReport(_Data):
                     PostMsg_ = PostMsg_ + '\n' + Add_StringFiller(Date_.strftime("%B %d, %Y"),20) + ' | ' + _Data[key]['Holiday']
                 else:
                     PostMsg_ = Add_StringFiller(Date_.strftime("%B %d, %Y"),20) + ' | ' + _Data[key]['Holiday']
+            except Exception as e:
+                print(f'\tError creating embed: {e}')
+            except BaseException as e:
+                print(f'\tError creating embed: {e}')
+
+        if key == 'Screenshots':
+            try:
+                if (PostMsg_ != None):
+                    PostMsg_ = PostMsg_ + '\n' + Add_StringFiller('Screenshots',20) + ' | ' + ', '.join(map(str,_Data[key]['Hours'][str(CurrentDay)]))
+                else:
+                    PostMsg_ = Add_StringFiller('Screenshots',20) + ' | ' + ', '.join(map(str,_Data[key]['Hours'][str(CurrentDay)]))
             except Exception as e:
                 print(f'\tError creating embed: {e}')
             except BaseException as e:
