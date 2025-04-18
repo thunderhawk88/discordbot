@@ -491,9 +491,9 @@ def Create_HolidayReport(_Data):
 
                 # create post strings
                 if (PostMsg_ != None):
-                    PostMsg_ = PostMsg_ + '\n' + Add_StringFiller(Date_.strftime("%B %d, %Y"),20) + ' | ' + _Data[key]['Holiday']
+                    PostMsg_ = PostMsg_ + '\n' + Add_StringFiller(_Data[key]['Holiday'],20) + ' | ' + Date_.strftime("%B %d, %Y")
                 else:
-                    PostMsg_ = Add_StringFiller(Date_.strftime("%B %d, %Y"),20) + ' | ' + _Data[key]['Holiday']
+                    PostMsg_ = Add_StringFiller(_Data[key]['Holiday'],20) + ' | ' + Date_.strftime("%B %d, %Y")
             except Exception as e:
                 print(f'\tError creating embed: {e}')
             except BaseException as e:
